@@ -28,6 +28,13 @@
         <label>📍 出生城市</label>
         <input type="text" id="city" placeholder="例如：台北市" value="台北市">
 
+        <label>👤 性別</label>
+        <select id="gender" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white;">
+            <option value="F">女性</option>
+            <option value="M">男性</option>
+            <option value="U">不透露</option>
+        </select>
+
         <button id="btn" onclick="send()">確認送出</button>
     </div>
 
@@ -41,35 +48,40 @@
         });
 
     function send() {
-    const d = document.getElementById('date').value;
-    const t = document.getElementById('time').value; // 這裡是 24 小時制格式，如 "22:55"
-    const c = document.getElementById('city').value;
+        const d = document.getElementById('date').value;
+        const t = document.getElementById('time').value; // 24 小時制格式，如 "22:55"
+        const c = document.getElementById('city').value;
+        const g = document.getElementById('gender').value; // 取得性別代碼 F/M/U
 
-    if (!d || !t || !c) {
-        alert("請完整填寫資料喔！");
-        return;
-    }
+        if (!d || !t || !c || !g) {
+            alert("請完整填寫資料喔！");
+            return;
+        }
 
-    // --- 新增：格式化時間給使用者再次確認 ---
-    const [hour, minute] = t.split(':');
-    const h = parseInt(hour);
-    const period = h >= 12 ? "下午 (PM)" : "上午 (AM)";
-    const displayH = h > 12 ? h - 12 : h;
+        // --- 格式化顯示資料給使用者再次確認 ---
+        const [hour, minute] = t.split(':');
+        const h = parseInt(hour);
+        const period = h >= 12 ? "下午 (PM)" : "上午 (AM)";
+        const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+        
+        const genderLabels = { "F": "女性", "M": "男性", "U": "不透露/中性" };
+        const genderText = genderLabels[g];
     
-    // 彈出確認視窗，明確顯示「上午/下午」
-    const confirmMsg = `您選擇的是：\n${d}\n${period} ${displayH}:${minute}\n${c}\n\n確認送出嗎？`;
-    
-    if (!confirm(confirmMsg)) {
-        return; // 使用者按取消，就不送出
+        // 彈出確認視窗，明確顯示「上午/下午」，包含性別資訊
+        const confirmMsg = `您選擇的是：\n日期：${d}\n時間：${period} ${displayH}:${minute}\n城市：${c}\n性別：${genderText}\n\n確認送出嗎？`;
+        
+        if (!confirm(confirmMsg)) {
+            return; // 使用者按取消，就不送出
+        }
+        // --------------------------------------
+
+        // 修改指令格式為：/birth [日期] [時間] [城市] [性別]
+        const command = `/birth ${d} ${t} ${c} ${g}`;
+
+        liff.sendMessages([{ type: 'text', text: command }])
+            .then(() => liff.closeWindow())
+            .catch(err => alert("發送失敗，請確認您已加入好友並允許傳訊"));
     }
-    // --------------------------------------
-
-    const command = `/birth ${d} ${t} ${c}`;
-
-    liff.sendMessages([{ type: 'text', text: command }])
-        .then(() => liff.closeWindow())
-        .catch(err => alert("發送失敗，請確認您已加入好友並允許傳訊"));
-}
     </script>
 </body>
 </html>
