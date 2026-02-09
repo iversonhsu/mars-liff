@@ -39,48 +39,63 @@
     </div>
 
     <script>
-        // 這裡等一下要填入您的 LIFF ID
         const LIFF_ID = "2009047186-VUUAVTF4";
+        // 這裡要填入您主工作流中「新 Webhook」的 Production URL
+        const WEBHOOK_URL = "https://您的n8n網址/webhook/liff-register"; 
 
-        // 初始化
         liff.init({ liffId: LIFF_ID }).catch(err => {
-            alert("啟動失敗，請確認是在 LINE 中開啟");
+            alert("啟動失敗");
         });
 
-    function send() {
+    async function send() {
         const d = document.getElementById('date').value;
-        const t = document.getElementById('time').value; // 24 小時制格式，如 "22:55"
+        const t = document.getElementById('time').value;
         const c = document.getElementById('city').value;
-        const g = document.getElementById('gender').value; // 取得性別代碼 F/M/U
+        const g = document.getElementById('gender').value;
 
         if (!d || !t || !c || !g) {
             alert("請完整填寫資料喔！");
             return;
         }
 
-        // --- 格式化顯示資料給使用者再次確認 ---
         const [hour, minute] = t.split(':');
         const h = parseInt(hour);
         const period = h >= 12 ? "下午 (PM)" : "上午 (AM)";
         const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-        
-        const genderLabels = { "F": "女性", "M": "男性", "U": "不透露/中性" };
-        const genderText = genderLabels[g];
+        const genderText = { "F": "女性", "M": "男性", "U": "不透露/中性" }[g];
     
-        // 彈出確認視窗，明確顯示「上午/下午」，包含性別資訊
-        const confirmMsg = `您選擇的是：\n日期：${d}\n時間：${period} ${displayH}:${minute}\n城市：${c}\n性別：${genderText}\n\n確認送出嗎？`;
-        
-        if (!confirm(confirmMsg)) {
-            return; // 使用者按取消，就不送出
+        if (!confirm(`確認送出資料嗎？\n日期：${d}\n時間：${period} ${displayH}:${minute}\n城市：${c}\n性別：${genderText}`)) {
+            return;
         }
-        // --------------------------------------
 
-        // 修改指令格式為：/birth [日期] [時間] [城市] [性別]
-        const command = `/birth ${d} ${t} ${c} ${g}`;
+        try {
+            // 關鍵修改 1：獲取使用者 userId
+            const profile = await liff.getProfile();
+            const userId = profile.userId;
 
-        liff.sendMessages([{ type: 'text', text: command }])
-            .then(() => liff.closeWindow())
-            .catch(err => alert("發送失敗，請確認您已加入好友並允許傳訊"));
+            // 關鍵修改 2：透過 API 傳送資料給 n8n
+            const response = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    date: d,
+                    time: t,
+                    city: c,
+                    gender: g,
+                    type: "api_registration" // 標註這是從 API 來的
+                })
+            });
+
+            if (response.ok) {
+                // 成功後直接關閉，聊天室會乾乾淨淨
+                liff.closeWindow();
+            } else {
+                alert("傳送失敗，請聯繫管理員");
+            }
+        } catch (err) {
+            alert("錯誤: " + err.message);
+        }
     }
     </script>
 </body>
