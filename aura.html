@@ -5,16 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>馬爾斯動態氣場能量場</title>
     <style>
-        body { margin: 0; background-color: #F8F8F8; overflow: hidden; }
+        body { margin: 0; background-color: #F8F8F8; overflow: hidden; font-family: sans-serif; }
         canvas { display: block; width: 100vw; height: 100vh; }
+        
+        /* 選單面板樣式 */
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
+        .control-item {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #444;
+        }
+        .control-item:last-child { margin-bottom: 0; }
+        .control-item input { margin-right: 10px; cursor: pointer; }
+        
+        /* 標籤顏色提示 */
+        .color-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
     </style>
 </head>
 <body>
+
+    <div id="controls">
+        <div style="font-weight: bold; margin-bottom: 10px; font-size: 16px;">能量場顯現設置</div>
+        <label class="control-item">
+            <input type="checkbox" id="showFire" checked> 
+            <div class="color-dot" style="background: #ff5f6d;"></div> 🔥 火之行動 (Fire)
+        </label>
+        <label class="control-item">
+            <input type="checkbox" id="showEarth" checked> 
+            <div class="color-dot" style="background: #8b4513;"></div> ⛰️ 土之根基 (Earth)
+        </label>
+        <label class="control-item">
+            <input type="checkbox" id="showAir" checked> 
+            <div class="color-dot" style="background: #2ecc71;"></div> 💨 風之思緒 (Air)
+        </label>
+        <label class="control-item">
+            <input type="checkbox" id="showWater" checked> 
+            <div class="color-dot" style="background: #3498db;"></div> 💧 水之情緒 (Water)
+        </label>
+    </div>
+
     <canvas id="canvas"></canvas>
+
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const params = new URLSearchParams(window.location.search);
+
+        // 取得控制項元件
+        const toggles = {
+            fire: document.getElementById('showFire'),
+            earth: document.getElementById('showEarth'),
+            air: document.getElementById('showAir'),
+            water: document.getElementById('showWater')
+        };
 
         const scores = {
             fire: parseFloat(params.get('fire')) || 0,
@@ -34,17 +90,25 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // ⛰️ 土 (修正)：頻率由 0.005 提高至 0.02，讓密度對齊靜態圖
-            drawWave('#8b4513', scores.earth * 15, 0.01, offset * 0.4, 'hill');
+            // ⛰️ 土
+            if (toggles.earth.checked) {
+                drawWave('#8b4513', scores.earth * 15, 0.01, offset * 0.4, 'hill');
+            }
             
-            // 💧 水：維持原狀
-            drawWave('#3498db', scores.water * 15, 0.02, offset * 1.0, 'sine');
+            // 💧 水
+            if (toggles.water.checked) {
+                drawWave('#3498db', scores.water * 15, 0.02, offset * 1.0, 'sine');
+            }
             
-            // 💨 風：維持原狀
-            drawWave('#2ecc71', scores.air * 15, 0.03, offset * 1.8, 'wind');
+            // 💨 風
+            if (toggles.air.checked) {
+                drawWave('#2ecc71', scores.air * 15, 0.03, offset * 1.8, 'wind');
+            }
             
-            // 🔥 火：維持妳滿意的寬度
-            drawWave('#ff5f6d', scores.fire * 15, 0.01, offset * 3.0, 'spike');
+            // 🔥 火
+            if (toggles.fire.checked) {
+                drawWave('#ff5f6d', scores.fire * 15, 0.01, offset * 3.0, 'spike');
+            }
             
             offset += 0.01; 
             requestAnimationFrame(draw);
@@ -60,7 +124,6 @@
                 if (type === 'spike') {
                     y = (Math.abs(((x * freq + shift) % 1) - 0.5) * 4 - 1) * amp;
                 } else if (type === 'hill') {
-                    // 維持規律山丘邏輯
                     y = Math.sin(x * freq + shift) * amp;
                 } else if (type === 'wind') {
                     y = (Math.sin(x * freq + shift) * 0.7 + Math.sin(x * freq * 0.4 + shift * 1.3) * 0.3) * amp;
