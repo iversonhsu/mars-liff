@@ -35,29 +35,29 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 畫面底部的基準線 (固定位置，不再飄移)
+            // 畫面底部的基準線，設定在畫面約 80% 的高度
             const baseline = canvas.height * 0.8; 
 
-            // ⛰️ 土 (Earth)：最慢、寬大平滑。修正為 Sine 波，底部不再有 V 型尖角
-            drawWave('#8b4513', scores.earth * 25, 0.012, offset * 0.4, 'sine', baseline);
+            // ⛰️ 土 (Earth)：最慢、寬大平穩的山丘。修正為純 Sine 波頂部。
+            drawWave('#8b4513', scores.earth * 25, 0.012, offset * 0.3, 'hill', baseline);
 
-            // 💧 水 (Water)：中速、規律正弦。
-            drawWave('#3498db', scores.water * 25, 0.025, offset * 0.8, 'sine', baseline);
+            // 💧 水 (Water)：中速、規律正弦波。
+            drawWave('#3498db', scores.water * 20, 0.025, offset * 0.8, 'sine', baseline);
 
-            // 💨 風 (Air)：快速、疊加波產生不規則感。
-            drawWave('#2ecc71', scores.air * 25, 0.045, offset * 1.5, 'wind', baseline);
+            // 💨 風 (Air)：快速、疊加波產生忽高忽低的不規則感。
+            drawWave('#2ecc71', scores.air * 22, 0.045, offset * 1.5, 'wind', baseline);
 
-            // 🔥 火 (Fire)：最快、極細尖刺。修正為高頻 Zigzag。
-            drawWave('#ff5f6d', scores.fire * 25, 0.12, offset * 3, 'spike', baseline);
+            // 🔥 火 (Fire)：極高頻尖刺。調整頻率使其不至於過窄，對齊 [8,0,8,0] 的視覺。
+            drawWave('#ff5f6d', scores.fire * 25, 0.09, offset * 2.5, 'spike', baseline);
 
-            offset += 0.01;
+            offset += 0.015;
             requestAnimationFrame(draw);
         }
 
         function drawWave(color, amp, freq, shift, type, baseline) {
             ctx.beginPath();
             ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2.5;
             ctx.fillStyle = color + "33"; // 透明填充與靜態圖一致
 
             ctx.moveTo(0, baseline);
@@ -65,21 +65,24 @@
             for (let x = 0; x <= canvas.width; x += 1) {
                 let y;
                 if (type === 'spike') {
-                    // 🔥 火：極細尖刺修正 (Zigzag 邏輯)
+                    // 🔥 火：三角形鋸齒波，調整週期使其寬度與靜態圖一致
                     y = (Math.abs(((x * freq + shift) % 1) - 0.5) * 4 - 1) * amp;
                 } else if (type === 'wind') {
-                    // 💨 風：不規則疊加波
-                    y = (Math.sin(x * freq + shift) * 0.7 + Math.sin(x * freq * 0.5 + shift * 1.2) * 0.3) * amp;
+                    // 💨 風：混合主波與副波，產生不規則高度變化
+                    y = (Math.sin(x * freq + shift) * 0.6 + Math.sin(x * freq * 0.6 + shift * 1.3) * 0.4) * amp;
+                } else if (type === 'hill') {
+                    // ⛰️ 土：平滑的山丘，只取正向波形
+                    y = -Math.abs(Math.sin(x * freq + shift)) * amp;
                 } else {
-                    // ⛰️ 土 & 💧 水：平滑 Sine 波，解決尖角問題
+                    // 💧 水：標準平滑正弦波
                     y = Math.sin(x * freq + shift) * amp;
                 }
                 
-                // 讓波形坐在 baseline 上往上生長
-                ctx.lineTo(x, baseline + y);
+                // 所有波形都從基準線 (baseline) 向上生長
+                const finalY = (type === 'hill') ? (baseline + y) : (baseline + y);
+                ctx.lineTo(x, (type === 'spike' || type === 'hill') ? baseline + y : baseline + y);
             }
             
-            // 封閉下方區域進行填充
             ctx.lineTo(canvas.width, baseline);
             ctx.lineTo(0, baseline);
             ctx.closePath();
