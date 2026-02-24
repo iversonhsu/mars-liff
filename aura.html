@@ -16,7 +16,7 @@
         const ctx = canvas.getContext('2d');
         const params = new URLSearchParams(window.location.search);
 
-        // 讀取來自 n8n 的元素分數
+        // 讀取分數
         const scores = {
             fire: parseFloat(params.get('fire')) || 0,
             earth: parseFloat(params.get('earth')) || 0,
@@ -34,14 +34,19 @@
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // ⛰️ 土：低頻寬山丘 (咖啡色)
+            
+            // ⛰️ 土：(暫時維持原狀，後續再處理妳提到的尖角問題)
             drawWave('#8b4513', scores.earth * 15, 0.005, offset * 0.5, 'hill');
+            
             // 💧 水：對稱正弦波 (藍色)
             drawWave('#3498db', scores.water * 15, 0.02, offset * 1.2, 'sine');
-            // 💨 風：不規則流動 (綠色)
-            drawWave('#2ecc71', scores.air * 15, 0.03, offset * 2, 'sine');
-            // 🔥 火：高頻尖刺 (紅色)
-            drawWave('#ff5f6d', scores.fire * 15, 0.08, offset * 4, 'spike');
+            
+            // 💨 風 (修正)：使用混合頻率產生「不規則」的高低落差
+            drawWave('#2ecc71', scores.air * 15, 0.03, offset * 2, 'wind');
+            
+            // 🔥 火 (修正)：將頻率調小（0.08 -> 0.05），使波形變寬
+            drawWave('#ff5f6d', scores.fire * 15, 0.05, offset * 4, 'spike');
+            
             offset += 0.05;
             requestAnimationFrame(draw);
         }
@@ -53,9 +58,19 @@
             ctx.fillStyle = color + "22"; 
             for (let x = 0; x < canvas.width; x++) {
                 let y;
-                if (type === 'spike') y = (Math.abs(((x * freq + shift) % 1) - 0.5) * 4 - 1) * amp;
-                else if (type === 'hill') y = Math.sin(x * freq + shift) * Math.cos(x * 0.002) * amp;
-                else y = Math.sin(x * freq + shift) * amp;
+                if (type === 'spike') {
+                    // 火元素：三角形尖刺
+                    y = (Math.abs(((x * freq + shift) % 1) - 0.5) * 4 - 1) * amp;
+                } else if (type === 'hill') {
+                    // 土元素：目前妳代碼中的調變波
+                    y = Math.sin(x * freq + shift) * Math.cos(x * 0.002) * amp;
+                } else if (type === 'wind') {
+                    // ✨ 核心修正：混合兩組頻率，產生跟靜態圖一樣「忽高忽低」的不規則感
+                    y = (Math.sin(x * freq + shift) * 0.7 + Math.sin(x * freq * 0.4 + shift * 1.3) * 0.3) * amp;
+                } else {
+                    y = Math.sin(x * freq + shift) * amp;
+                }
+                
                 if (x === 0) ctx.moveTo(x, (canvas.height/2) + y);
                 else ctx.lineTo(x, (canvas.height/2) + y);
             }
