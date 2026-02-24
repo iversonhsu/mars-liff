@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>馬爾斯動態氣場能量場</title>
+    <style>
+        body { margin: 0; background-color: #F8F8F8; overflow: hidden; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const params = new URLSearchParams(window.location.search);
+
+        // 讀取來自 n8n 的元素分數
+        const scores = {
+            fire: parseFloat(params.get('fire')) || 0,
+            earth: parseFloat(params.get('earth')) || 0,
+            air: parseFloat(params.get('air')) || 0,
+            water: parseFloat(params.get('water')) || 0
+        };
+
+        let offset = 0;
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.onresize = resize;
+        resize();
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // ⛰️ 土：低頻寬山丘 (咖啡色)
+            drawWave('#8b4513', scores.earth * 15, 0.005, offset * 0.5, 'hill');
+            // 💧 水：對稱正弦波 (藍色)
+            drawWave('#3498db', scores.water * 15, 0.02, offset * 1.2, 'sine');
+            // 💨 風：不規則流動 (綠色)
+            drawWave('#2ecc71', scores.air * 15, 0.03, offset * 2, 'sine');
+            // 🔥 火：高頻尖刺 (紅色)
+            drawWave('#ff5f6d', scores.fire * 15, 0.08, offset * 4, 'spike');
+            offset += 0.05;
+            requestAnimationFrame(draw);
+        }
+
+        function drawWave(color, amp, freq, shift, type) {
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.fillStyle = color + "22"; 
+            for (let x = 0; x < canvas.width; x++) {
+                let y;
+                if (type === 'spike') y = (Math.abs(((x * freq + shift) % 1) - 0.5) * 4 - 1) * amp;
+                else if (type === 'hill') y = Math.sin(x * freq + shift) * Math.cos(x * 0.002) * amp;
+                else y = Math.sin(x * freq + shift) * amp;
+                if (x === 0) ctx.moveTo(x, (canvas.height/2) + y);
+                else ctx.lineTo(x, (canvas.height/2) + y);
+            }
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.fill();
+            ctx.stroke();
+        }
+        draw();
+    </script>
+</body>
+</html>
