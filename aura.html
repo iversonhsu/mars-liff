@@ -106,24 +106,24 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // 🔥 火(Fire) - 最底層
+            if (toggles.fire.checked) {
+                drawWave('#ff5f6d', scores.fire * 15, 0.01, offset * 3.0, 'spike');
+            }
+
             // ⛰️ 土(Earth)
             if (toggles.earth.checked) {
                 drawWave('#8b4513', scores.earth * 15, 0.01, offset * 0.4, 'hill');
-            }
-            
-            // 💧 水(Water)
-            if (toggles.water.checked) {
-                drawWave('#3498db', scores.water * 15, 0.02, offset * 1.0, 'sine');
             }
             
             // 💨 風(Air)
             if (toggles.air.checked) {
                 drawWave('#2ecc71', scores.air * 15, 0.03, offset * 1.8, 'wind');
             }
-            
-            // 🔥 火(Fire)
-            if (toggles.fire.checked) {
-                drawWave('#ff5f6d', scores.fire * 15, 0.01, offset * 3.0, 'spike');
+
+            // 💧 水(Water) - 最頂層
+            if (toggles.water.checked) {
+                drawWave('#3498db', scores.water * 15, 0.02, offset * 1.0, 'sine');
             }
             
             offset += 0.01; 
