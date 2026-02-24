@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>馬爾斯動態氣場能量場</title>
+    <title>元素動態波</title>
     <style>
         body { margin: 0; background-color: #F8F8F8; overflow: hidden; font-family: sans-serif; }
         canvas { display: block; width: 100vw; height: 100vh; }
@@ -13,47 +13,63 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 15px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 12px 18px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
             z-index: 100;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .control-title {
+            font-weight: bold; 
+            margin-bottom: 12px; 
+            font-size: 15px;
+            color: #333;
+            letter-spacing: 1px;
         }
         .control-item {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             cursor: pointer;
             font-size: 14px;
             color: #444;
+            user-select: none;
+            transition: opacity 0.2s;
         }
+        .control-item:hover { opacity: 0.7; }
         .control-item:last-child { margin-bottom: 0; }
-        .control-item input { margin-right: 10px; cursor: pointer; }
-        
-        /* 標籤顏色提示 */
-        .color-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .control-item input { 
+            margin-right: 12px; 
+            cursor: pointer; 
+            width: 16px;
+            height: 16px;
+        }
+        .label-text {
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
 
     <div id="controls">
-        <div style="font-weight: bold; margin-bottom: 10px; font-size: 16px;">能量場顯現設置</div>
+        <div class="control-title">動態波顯示設定</div>
         <label class="control-item">
             <input type="checkbox" id="showFire" checked> 
-            <div class="color-dot" style="background: #ff5f6d;"></div> 🔥 火之行動 (Fire)
+            <span class="label-text">🔥 Fire</span>
         </label>
         <label class="control-item">
             <input type="checkbox" id="showEarth" checked> 
-            <div class="color-dot" style="background: #8b4513;"></div> ⛰️ 土之根基 (Earth)
+            <span class="label-text">⛰️ Earth</span>
         </label>
         <label class="control-item">
             <input type="checkbox" id="showAir" checked> 
-            <div class="color-dot" style="background: #2ecc71;"></div> 💨 風之思緒 (Air)
+            <span class="label-text">💨 Air</span>
         </label>
         <label class="control-item">
             <input type="checkbox" id="showWater" checked> 
-            <div class="color-dot" style="background: #3498db;"></div> 💧 水之情緒 (Water)
+            <span class="label-text">💧 Water</span>
         </label>
     </div>
 
@@ -90,22 +106,22 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // ⛰️ 土
+            // ⛰️ Earth
             if (toggles.earth.checked) {
                 drawWave('#8b4513', scores.earth * 15, 0.01, offset * 0.4, 'hill');
             }
             
-            // 💧 水
+            // 💧 Water
             if (toggles.water.checked) {
                 drawWave('#3498db', scores.water * 15, 0.02, offset * 1.0, 'sine');
             }
             
-            // 💨 風
+            // 💨 Air
             if (toggles.air.checked) {
                 drawWave('#2ecc71', scores.air * 15, 0.03, offset * 1.8, 'wind');
             }
             
-            // 🔥 火
+            // 🔥 Fire
             if (toggles.fire.checked) {
                 drawWave('#ff5f6d', scores.fire * 15, 0.01, offset * 3.0, 'spike');
             }
@@ -117,8 +133,8 @@
         function drawWave(color, amp, freq, shift, type) {
             ctx.beginPath();
             ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.fillStyle = color + "22"; 
+            ctx.lineWidth = 2.5; // 稍微加粗線條增加質感
+            ctx.fillStyle = color + "18"; // 微調透明度
             for (let x = 0; x < canvas.width; x++) {
                 let y;
                 if (type === 'spike') {
