@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>馬爾斯動態氣場能量場</title>
     <style>
-        /* 保持淺灰色背景，確保與 LINE 卡片背景色一致 */
         body { margin: 0; background-color: #F8F8F8; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; }
     </style>
@@ -17,7 +16,6 @@
         const ctx = canvas.getContext('2d');
         const params = new URLSearchParams(window.location.search);
 
-        // 讀取來自 n8n 的元素分數，若無則預設為 0
         const scores = {
             fire: parseFloat(params.get('fire')) || 0,
             earth: parseFloat(params.get('earth')) || 0,
@@ -36,20 +34,15 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 繪製順序由底層至頂層：土 -> 水 -> 風 -> 火
-
-            // ⛰️ 土：低頻寬山丘 (咖啡色)，修正為穩定高度以代表根基
+            // ⛰️ 土：改用絕對值，消除尖角，呈現穩定圓潤山丘
             drawWave('#8b4513', scores.earth * 15, 0.005, offset * 0.5, 'hill');
-
-            // 💧 水：對稱正弦波 (藍色)，規律的代謝律動
+            // 💧 水：對稱正弦波 (藍色)
             drawWave('#3498db', scores.water * 15, 0.02, offset * 1.2, 'sine');
-
-            // 💨 風：不規則流動 (綠色)，修正為疊加波以呈現非規律動態
+            // 💨 風：疊加波，呈現「不規則」流動感
             drawWave('#2ecc71', scores.air * 15, 0.03, offset * 2, 'wind');
-
-            // 🔥 火：高頻尖刺 (紅色)，代表行動力與執行頻率
+            // 🔥 火：高頻尖刺 (紅色)
             drawWave('#ff5f6d', scores.fire * 15, 0.08, offset * 4, 'spike');
-
+            
             offset += 0.05;
             requestAnimationFrame(draw);
         }
@@ -58,36 +51,28 @@
             ctx.beginPath();
             ctx.strokeStyle = color;
             ctx.lineWidth = 2;
-            ctx.fillStyle = color + "22"; // 使用透明填充增加層次感
-
+            ctx.fillStyle = color + "22"; 
             for (let x = 0; x < canvas.width; x++) {
                 let y;
                 if (type === 'spike') {
-                    // 紅色尖刺：使用鋸齒波函數
                     y = (Math.abs(((x * freq + shift) % 1) - 0.5) * 4 - 1) * amp;
                 } else if (type === 'hill') {
-                    // 咖啡山丘：使用絕對值正弦波，確保山丘形狀穩定且不隨時間大幅變形
+                    // ✨ 核心修正：使用負的絕對值，讓它永遠是向上的平滑拱形，解決尖角問題
                     y = -Math.abs(Math.sin(x * freq + shift)) * amp * 1.5;
                 } else if (type === 'wind') {
-                    // 不規則風：透過疊加兩個不同頻率的波，模擬忽高忽低的不規則流動
-                    y = (Math.sin(x * freq + shift) * 0.7 + Math.sin(x * freq * 0.5 + shift * 1.5) * 0.3) * amp;
+                    // ✨ 核心修正：混合兩組頻率，創造忽高忽低的不規則風感
+                    y = (Math.sin(x * freq + shift) * 0.7 + Math.sin(x * freq * 0.4 + shift * 1.3) * 0.3) * amp;
                 } else {
-                    // 藍色水波：標準正弦波
                     y = Math.sin(x * freq + shift) * amp;
                 }
-                
-                // 於畫布垂直中心點繪製
                 if (x === 0) ctx.moveTo(x, (canvas.height/2) + y);
                 else ctx.lineTo(x, (canvas.height/2) + y);
             }
-            
-            // 封閉路徑以進行填充
             ctx.lineTo(canvas.width, canvas.height);
             ctx.lineTo(0, canvas.height);
             ctx.fill();
             ctx.stroke();
         }
-        
         draw();
     </script>
 </body>
