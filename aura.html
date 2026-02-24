@@ -34,16 +34,16 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // ⛰️ 土 (修正)：移除 Cos 調變，改用純 Sine 波使其高度「規律」對齊靜態圖
-            drawWave('#8b4513', scores.earth * 15, 0.005, offset * 0.4, 'hill');
+            // ⛰️ 土 (修正)：頻率由 0.005 提高至 0.02，讓密度對齊靜態圖
+            drawWave('#8b4513', scores.earth * 15, 0.02, offset * 0.4, 'hill');
             
             // 💧 水：維持原狀
             drawWave('#3498db', scores.water * 15, 0.02, offset * 1.0, 'sine');
             
-            // 💨 風：維持原狀（不規則疊加波）
+            // 💨 風：維持原狀
             drawWave('#2ecc71', scores.air * 15, 0.03, offset * 1.8, 'wind');
             
-            // 🔥 火：維持妳滿意的寬度 (0.01) 與速度
+            // 🔥 火：維持妳滿意的寬度
             drawWave('#ff5f6d', scores.fire * 15, 0.01, offset * 3.0, 'spike');
             
             offset += 0.01; 
@@ -60,7 +60,7 @@
                 if (type === 'spike') {
                     y = (Math.abs(((x * freq + shift) % 1) - 0.5) * 4 - 1) * amp;
                 } else if (type === 'hill') {
-                    // ✨ 核心修正：只保留 Sine 波，移除 Cos(x * 0.002)，讓每個山丘高度一致
+                    // 維持規律山丘邏輯
                     y = Math.sin(x * freq + shift) * amp;
                 } else if (type === 'wind') {
                     y = (Math.sin(x * freq + shift) * 0.7 + Math.sin(x * freq * 0.4 + shift * 1.3) * 0.3) * amp;
