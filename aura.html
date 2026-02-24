@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>元素動態波</title>
     <style>
-        body { margin: 0; background-color: #F8F8F8; overflow: hidden; font-family: "Microsoft JhengHei", sans-serif; }
+        body { margin: 0; background-color: #F8F8F8; overflow: hidden; font-family: sans-serif; }
         canvas { display: block; width: 100vw; height: 100vh; }
         
         /* 選單面板樣式 */
@@ -14,7 +14,7 @@
             top: 20px;
             left: 20px;
             background: rgba(255, 255, 255, 0.85);
-            padding: 15px 20px;
+            padding: 12px 18px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             backdrop-filter: blur(8px);
@@ -23,36 +23,31 @@
         }
         .control-title {
             font-weight: bold; 
-            margin-bottom: 15px; 
-            font-size: 16px;
+            margin-bottom: 12px; 
+            font-size: 15px;
             color: #333;
             letter-spacing: 1px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            padding-bottom: 8px;
         }
         .control-item {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 14px;
             color: #444;
             user-select: none;
-            transition: transform 0.1s;
+            transition: opacity 0.2s;
         }
-        .control-item:hover { transform: translateX(2px); }
+        .control-item:hover { opacity: 0.7; }
         .control-item:last-child { margin-bottom: 0; }
-        
         .control-item input { 
             margin-right: 12px; 
             cursor: pointer; 
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
         }
         .label-text {
             font-weight: 500;
-            display: flex;
-            align-items: center;
         }
     </style>
 </head>
@@ -111,22 +106,22 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // ⛰️ Earth (土)
+            // ⛰️ 土(Earth)
             if (toggles.earth.checked) {
                 drawWave('#8b4513', scores.earth * 15, 0.01, offset * 0.4, 'hill');
             }
             
-            // 💧 Water (水)
+            // 💧 水(Water)
             if (toggles.water.checked) {
                 drawWave('#3498db', scores.water * 15, 0.02, offset * 1.0, 'sine');
             }
             
-            // 💨 Air (風)
+            // 💨 風(Air)
             if (toggles.air.checked) {
                 drawWave('#2ecc71', scores.air * 15, 0.03, offset * 1.8, 'wind');
             }
             
-            // 🔥 Fire (火)
+            // 🔥 火(Fire)
             if (toggles.fire.checked) {
                 drawWave('#ff5f6d', scores.fire * 15, 0.01, offset * 3.0, 'spike');
             }
