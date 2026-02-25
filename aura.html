@@ -71,6 +71,10 @@
             <input type="checkbox" id="showWater" checked> 
             <span class="label-text">💧 水(Water)</span>
         </label>
+        <label class="control-item" style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
+            <input type="checkbox" id="showGrid" checked> 
+            <span class="label-text">📏 能量水平(Level)</span>
+        </label>
     </div>
 
     <canvas id="canvas"></canvas>
@@ -85,7 +89,8 @@
             fire: document.getElementById('showFire'),
             earth: document.getElementById('showEarth'),
             air: document.getElementById('showAir'),
-            water: document.getElementById('showWater')
+            water: document.getElementById('showWater'),
+            grid: document.getElementById('showGrid')
         };
 
         const scores = {
@@ -103,25 +108,59 @@
         window.onresize = resize;
         resize();
 
+        // 繪製能量水平刻度
+        function drawGrid() {
+            ctx.save();
+            ctx.setLineDash([5, 5]); 
+            ctx.lineWidth = 1;
+            ctx.textAlign = 'right';
+            ctx.font = '10px Arial';
+            
+            for (let i = 0; i <= 10; i++) {
+                let yOffset = i * 15;
+                [1, -1].forEach(dir => {
+                    let y = (canvas.height / 2) + (yOffset * dir);
+                    // 中心線加深
+                    ctx.strokeStyle = i === 0 ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)';
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                    
+                    // 標記數值
+                    if (dir === -1 || i === 0) {
+                        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                        ctx.fillText(i, 18, y + 3);
+                    }
+                });
+            }
+            ctx.restore();
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 🔥 火(Fire) - 最底層
+            // 能量水平背景
+            if (toggles.grid.checked) {
+                drawGrid();
+            }
+
+            // 火元素
             if (toggles.fire.checked) {
                 drawWave('#ff5f6d', scores.fire * 15, 0.01, offset * 3.0, 'spike');
             }
 
-            // ⛰️ 土(Earth)
+            // 土元素
             if (toggles.earth.checked) {
                 drawWave('#8b4513', scores.earth * 15, 0.01, offset * 0.4, 'hill');
             }
             
-            // 💨 風(Air)
+            // 風元素
             if (toggles.air.checked) {
                 drawWave('#2ecc71', scores.air * 15, 0.03, offset * 1.8, 'wind');
             }
 
-            // 💧 水(Water) - 最頂層
+            // 水元素
             if (toggles.water.checked) {
                 drawWave('#3498db', scores.water * 15, 0.02, offset * 1.0, 'sine');
             }
