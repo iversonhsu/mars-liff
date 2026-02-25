@@ -116,7 +116,7 @@
             ctx.textAlign = 'right';
             ctx.font = '10px Arial';
             
-            // 統一使用原本 0 分那條線的顏色深度 rgba(0,0,0,0.2)
+            // 虛線顏色保持一致深度
             ctx.strokeStyle = 'rgba(0,0,0,0.2)';
 
             for (let i = 0; i <= 10; i++) {
@@ -129,9 +129,9 @@
                     ctx.lineTo(canvas.width, y);
                     ctx.stroke();
                     
-                    // 標記數值
+                    // 標記數值 - 加深為 0.6
                     if (dir === -1 || i === 0) {
-                        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                        ctx.fillStyle = 'rgba(0,0,0,0.6)';
                         ctx.fillText(i, 18, y + 3);
                     }
                 });
