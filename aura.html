@@ -116,12 +116,14 @@
             ctx.textAlign = 'right';
             ctx.font = '10px Arial';
             
+            // 統一使用原本 0 分那條線的顏色深度 rgba(0,0,0,0.2)
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+
             for (let i = 0; i <= 10; i++) {
                 let yOffset = i * 15;
                 [1, -1].forEach(dir => {
                     let y = (canvas.height / 2) + (yOffset * dir);
-                    // 中心線加深
-                    ctx.strokeStyle = i === 0 ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)';
+                    
                     ctx.beginPath();
                     ctx.moveTo(0, y);
                     ctx.lineTo(canvas.width, y);
