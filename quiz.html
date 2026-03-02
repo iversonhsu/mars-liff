@@ -51,12 +51,12 @@
         let selectedAns = "";
         let correctElements = [];
 
-        // ✅ 已設定為測試路徑
-        const API_BASE = "https://webbermars.app.n8n.cloud/webhook-test"; 
+        // ✅ 已修改為生產路徑 (Production URL)
+        const API_BASE = "https://webbermars.app.n8n.cloud/webhook"; 
 
         async function initLIFF() {
             try {
-                // ✅ 已填入您的 LIFF ID
+                // ✅ LIFF ID
                 await liff.init({ liffId: "2009047186-0mT7eAOQ" }); 
                 
                 const urlParams = new URLSearchParams(window.location.search);
@@ -78,13 +78,14 @@
 
         async function fetchQuestions() {
             try {
+                // 自動組合為 /get-questions
                 const res = await fetch(`${API_BASE}/get-questions`);
                 quizData = await res.json();
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
                 renderQuestion();
             } catch (err) {
-                document.getElementById('loading').innerText = "❌ 連結失敗，請確認 n8n 已開啟 Webhook 測試模式";
+                document.getElementById('loading').innerText = "❌ 連結失敗，請確認 n8n 的 Production Webhook 運作中";
             }
         }
 
@@ -155,12 +156,12 @@
             btn.disabled = true;
 
             try {
+                // 自動組合為 /submit-quiz
                 await fetch(`${API_BASE}/submit-quiz`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ uid: uid, correctElements: correctElements })
                 });
-                // ✅ 關鍵：這會暫停執行直到點擊「確定」，點完後立刻關閉視窗回到聊天室
                 alert("能量補給完成！請查看 LINE 導師報告。");
                 liff.closeWindow();
             } catch (err) {
