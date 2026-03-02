@@ -9,7 +9,13 @@
         body { font-family: -apple-system, "Noto Sans TC", sans-serif; background: #f0f4f7; padding: 15px; color: #333; margin: 0; }
         .quiz-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); max-width: 450px; margin: 20px auto; min-height: 400px; display: flex; flex-direction: column; }
         .element-tag { display: inline-block; padding: 5px 15px; border-radius: 25px; font-size: 14px; font-weight: bold; margin-bottom: 15px; color: white; align-self: flex-start; }
-        .fire { background: #e53935; } .earth { background: #795548; } .air { background: #03a9f4; } .water { background: #3f51b5; }
+        
+        /* 🎨 顏色修正區 */
+        .fire { background: #e53935; } 
+        .earth { background: #795548; } 
+        .air { background: #4caf50; }    /* 風元素：綠色 */
+        .water { background: #03a9f4; }  /* 水元素：淺藍色 */
+
         .question-text { font-size: 18px; font-weight: bold; line-height: 1.6; margin-bottom: 20px; }
         .option { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; text-align: left; cursor: pointer; transition: 0.3s; font-size: 16px; background: #fafafa; }
         .option.selected { border-color: #0288d1; background: #e1f5fe; color: #0288d1; font-weight: bold; }
@@ -72,7 +78,6 @@
 
         async function fetchQuestions() {
             try {
-                // 自動組合為 /get-questions
                 const res = await fetch(`${API_BASE}/get-questions`);
                 quizData = await res.json();
                 document.getElementById('loading').style.display = 'none';
@@ -150,12 +155,12 @@
             btn.disabled = true;
 
             try {
-                // 自動組合為 /submit-quiz
                 await fetch(`${API_BASE}/submit-quiz`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ uid: uid, correctElements: correctElements })
                 });
+                // ✅ 關鍵：這會暫停執行直到點擊「確定」，點完後立刻關閉視窗回到聊天室
                 alert("能量補給完成！請查看 LINE 導師報告。");
                 liff.closeWindow();
             } catch (err) {
