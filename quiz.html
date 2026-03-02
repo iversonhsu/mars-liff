@@ -45,19 +45,17 @@
         let selectedAns = "";
         let correctElements = [];
 
-        // ⚠️ 請修改成您的 n8n Webhook URL (測試時用 webhook-test)
+        // ✅ 已設定為測試路徑
         const API_BASE = "https://webbermars.app.n8n.cloud/webhook-test"; 
 
         async function initLIFF() {
             try {
-                // ⚠️ 請修改成您的 LIFF ID
-                await liff.init({ liffId: "填入妳的LIFF_ID" }); 
+                // ✅ 已填入您的 LIFF ID
+                await liff.init({ liffId: "2009047186-0mT7eAOQ" }); 
                 
-                // 1. 先嘗試從網址參數抓 UID (測試時好用)
                 const urlParams = new URLSearchParams(window.location.search);
                 uid = urlParams.get('uid');
 
-                // 2. 如果網址沒 UID，則從 LIFF 登入資訊抓
                 if (!uid) {
                     if (!liff.isLoggedIn()) {
                         liff.login();
@@ -74,13 +72,14 @@
 
         async function fetchQuestions() {
             try {
+                // 自動組合為 /get-questions
                 const res = await fetch(`${API_BASE}/get-questions`);
                 quizData = await res.json();
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
                 renderQuestion();
             } catch (err) {
-                document.getElementById('loading').innerText = "❌ 連結失敗，請確認 n8n 已開啟 Webhook";
+                document.getElementById('loading').innerText = "❌ 連結失敗，請確認 n8n 已開啟 Webhook 測試模式";
             }
         }
 
@@ -97,12 +96,11 @@
                 <div class="option" onclick="select(this, '(B)')">${q.option_b}</div>
                 <div class="option" onclick="select(this, '(C)')">${q.option_c}</div>
             `;
-            
             resetUI();
         }
 
         function select(el, val) {
-            if (document.getElementById('feedback-box').style.display === 'block') return; // 答題後鎖定
+            if (document.getElementById('feedback-box').style.display === 'block') return; 
             document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
             el.classList.add('selected');
             selectedAns = val;
@@ -152,6 +150,7 @@
             btn.disabled = true;
 
             try {
+                // 自動組合為 /submit-quiz
                 await fetch(`${API_BASE}/submit-quiz`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
