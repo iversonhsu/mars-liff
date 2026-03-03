@@ -19,6 +19,9 @@
     <div class="card">
         <h2>🔮 開啟您的魔法旅程</h2>
         
+        <label>🏷️ 您的暱稱</label>
+        <input type="text" id="nickname" placeholder="請輸入您想被稱呼的方式" required>
+
         <label>📅 出生日期</label>
         <input type="date" id="date" required>
         
@@ -48,12 +51,15 @@
         });
 
     async function send() {
+        // 獲取各欄位數值，包含新增的 nickname
+        const nick = document.getElementById('nickname').value;
         const d = document.getElementById('date').value;
         const t = document.getElementById('time').value;
         const c = document.getElementById('city').value;
         const g = document.getElementById('gender').value;
 
-        if (!d || !t || !c || !g) {
+        // 驗證是否填寫完整
+        if (!nick || !d || !t || !c || !g) {
             alert("請完整填寫資料喔！");
             return;
         }
@@ -64,21 +70,23 @@
         const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
         const genderText = { "F": "女性", "M": "男性", "U": "不透露/中性" }[g];
     
-        if (!confirm(`確認送出資料嗎？\n日期：${d}\n時間：${period} ${displayH}:${minute}\n城市：${c}\n性別：${genderText}`)) {
+        // 在確認視窗中加入暱稱顯示
+        if (!confirm(`確認送出資料嗎？\n暱稱：${nick}\n日期：${d}\n時間：${period} ${displayH}:${minute}\n城市：${c}\n性別：${genderText}`)) {
             return;
         }
 
         try {
-            // 關鍵修改 1：獲取使用者 userId
+            // 獲取使用者 userId
             const profile = await liff.getProfile();
             const userId = profile.userId;
 
-            // 關鍵修改 2：透過 API 傳送資料給 n8n
+            // 透過 API 傳送資料給 n8n
             const response = await fetch(WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userId: userId,
+                    nickname: nick, // 將暱稱傳送至後端
                     date: d,
                     time: t,
                     city: c,
@@ -88,7 +96,7 @@
             });
 
             if (response.ok) {
-                // 成功後直接關閉，聊天室會乾乾淨淨
+                // 成功後直接關閉
                 liff.closeWindow();
             } else {
                 alert("傳送失敗，請聯繫管理員");
