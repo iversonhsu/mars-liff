@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>能量滿溢 · 心靈契合達成</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        /* 強制全螢幕並隱藏捲軸 */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background-color: #000; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        /* 影片填滿螢幕但不變形，保持震撼感 */
+        video { 
+            width: 100%; height: 100%; object-fit: cover; 
+        }
+        /* 底部浮動文字特效 */
+        .overlay {
+            position: absolute; bottom: 15%; width: 100%;
+            text-align: center; pointer-events: none;
+            z-index: 10;
+        }
+        .achievement-text {
+            color: #D4AF37; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            font-size: 22px; font-weight: bold;
+            letter-spacing: 4px; text-shadow: 0 0 20px rgba(212, 175, 55, 0.9);
+            opacity: 0; animation: fadeInOut 6s ease-in-out forwards;
+        }
+        /* 文字淡入淡出動畫 */
+        @keyframes fadeInOut { 
+            0% { opacity: 0; transform: translateY(10px); } 
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <video id="magicVideo" autoplay muted playsinline>
+        <source src="https://storage.googleapis.com/mars-zen-astro-dev/videos/soul_match_achievement.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcs-signer-sa%40gen-lang-client-0769425383.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T025615Z&X-Goog-Expires=31536000&X-Goog-SignedHeaders=host&X-Goog-Signature=7c80128cb3a6fafd7804638aae571e913559459bcb4522477544b5481060061bc238be7d84b89dacbb2ff24d55caa097d1710664d1140e41ffa9b8d330ed4136f2e2c65a967dfb1504ca69944a4d314e233593325cd67fe14d12d6959f19e48d2ecc14bf88fdcf6847024720e076d29dad2c8f125a47e6b396d83664da75dc81331048f92466ea5cbb92ce0bb622349bb3e2f06f1af10fb44ac6df0b93a33b4ae47e56750f645d92dd025ce1f096fdaad00f2106174c620a60dcb837b7bed3b93cfc38dd7027e60646db0022831594caba1bb23b6b86eb47a77b83848187cf0877e7afbab458a215cf7fbef4a04358864b62731e0cbbf4514380827f03a63b71" type="video/mp4">
+    </video>
+
+    <div class="overlay">
+        <div class="achievement-text">✨ 達成奇蹟：心靈契合 ✨</div>
+    </div>
+
+    <script>
+        // 🔮 填入妳剛申請到的成就 LIFF ID
