@@ -52,8 +52,7 @@
     let params = new URLSearchParams(window.location.search);
     const correctAns = params.get('ans'); // 例如: (B)
     const userId = params.get('uid'); 
-    const newSeen = params.get('new_seen');
-    const currentCount = parseInt(params.get('count') || '0');
+    const qid = params.get('qid'); // ✨ 修正：改抓輕量的 qid
 
     async function init() {
         try {
@@ -61,7 +60,6 @@
             if (!liff.isLoggedIn()) { liff.login(); }
             
             document.getElementById('question').innerText = params.get('q') || "題目載入失敗";
-            // 修正：直接顯示傳過來的文字，不額外加 A.
             document.getElementById('opt-A').innerText = (params.get('a') || "---");
             document.getElementById('opt-B').innerText = (params.get('b') || "---");
             document.getElementById('opt-C').innerText = (params.get('c') || "---");
@@ -80,7 +78,6 @@
         const isCorrect = (chosen === correctAns);
         const resultArea = document.getElementById('result-area');
         
-        // 1. 網頁顯示結果
         resultArea.style.display = 'block';
         if (isCorrect) {
             resultArea.innerText = "正確! 靈氣點數上升"; 
@@ -93,21 +90,19 @@
         document.getElementById('submit-btn').style.display = 'none';
         document.getElementById('confirm-btn').style.display = 'block';
 
-        // 🚀 2. 悄悄傳送結果給 n8n
         const webhookUrl = "https://webbermars.app.n8n.cloud/webhook/quiz-submit"; 
 
         try {
-            // 準備今天的日期 (YYYY-MM-DD)
             const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
 
+            // 🚀 核心修改：不再傳送 newSeen 和 count，只傳 qid 讓後台處理
             await fetch(webhookUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     userId: userId,
                     isCorrect: isCorrect,
-                    newSeen: newSeen,
-                    count: currentCount + 1, // 次數加 1
+                    currentQid: qid, 
                     date: today
                 })
             });
