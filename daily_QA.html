@@ -50,7 +50,10 @@
 <script>
     let chosen = '';
     let params = new URLSearchParams(window.location.search);
-    const correctAns = params.get('ans'); // 從網址抓正確答案的代碼 (注意：這裡的 correctAns 格式應為 '(B)')
+    const correctAns = params.get('ans'); // 例如: (B)
+    const userId = params.get('uid'); 
+    const newSeen = params.get('new_seen');
+    const currentCount = parseInt(params.get('count') || '0');
 
     async function init() {
         try {
@@ -58,8 +61,7 @@
             if (!liff.isLoggedIn()) { liff.login(); }
             
             document.getElementById('question').innerText = params.get('q') || "題目載入失敗";
-            
-            // --- ✅ 修正 1：移除 "A. "，直接顯示傳過來的 "(A)長笛" ---
+            // 修正：直接顯示傳過來的文字，不額外加 A.
             document.getElementById('opt-A').innerText = (params.get('a') || "---");
             document.getElementById('opt-B').innerText = (params.get('b') || "---");
             document.getElementById('opt-C').innerText = (params.get('c') || "---");
@@ -68,28 +70,22 @@
 
     function select(el, val) {
         if (document.getElementById('submit-btn').style.display === 'none') return;
-        
-        // --- ✅ 修正 2：妳提交的是字母 'B'，但 correctAns 是 '(B)'，兩者無法相等 ---
-        // 妳的 $json.answer 格式是 `(B)`，所以妳點選按鈕時，要提交一樣的格式。
-        // 我已經把上面 HTML 的 select(this, 'A') 改成 select(this, '(A)')。
-        chosen = val; 
-        
+        chosen = val;
         document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
         el.classList.add('selected');
         document.getElementById('submit-btn').disabled = false;
     }
 
-    function handleSubmit() {
+    async function handleSubmit() {
         const isCorrect = (chosen === correctAns);
         const resultArea = document.getElementById('result-area');
         
+        // 1. 網頁顯示結果
         resultArea.style.display = 'block';
         if (isCorrect) {
             resultArea.innerText = "正確! 靈氣點數上升"; 
             resultArea.className = "result-box result-correct";
         } else {
-            // --- ✅ 修正 3：只要「錯誤，正確答案是(B)」就好 ---
-            // 🛑 移除：動態抓取正確選項的內容與 '---'
             resultArea.innerText = `錯誤，正確答案是${correctAns}`; 
             resultArea.className = "result-box result-wrong";
         }
@@ -97,13 +93,28 @@
         document.getElementById('submit-btn').style.display = 'none';
         document.getElementById('confirm-btn').style.display = 'block';
 
-        const msgText = isCorrect ? "星獸靈氣+20" : "再接再厲";
-        liff.sendMessages([{ type: 'text', text: msgText }])
-            .then(() => console.log("Sent:", msgText))
-            .catch(err => {
-                console.error(err);
-                resultArea.innerText += "\n(訊息傳送失敗，請檢查權限)";
+        // 🚀 2. 悄悄傳送結果給 n8n
+        const webhookUrl = "https://webbermars.app.n8n.cloud/webhook/quiz-submit"; 
+
+        try {
+            // 準備今天的日期 (YYYY-MM-DD)
+            const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
+
+            await fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: userId,
+                    isCorrect: isCorrect,
+                    newSeen: newSeen,
+                    count: currentCount + 1, // 次數加 1
+                    date: today
+                })
             });
+            console.log("答案已同步至星獸大腦");
+        } catch (err) {
+            console.error("同步失敗", err);
+        }
     }
 
     function handleClose() {
