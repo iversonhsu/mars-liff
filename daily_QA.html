@@ -50,17 +50,16 @@
 <script>
     let chosen = '';
     let params = new URLSearchParams(window.location.search);
-    const correctAns = params.get('ans'); // 從網址抓正確答案的代碼 (A, B, or C)
+    const correctAns = params.get('ans'); 
 
     async function init() {
         try {
-            // --- 🔧 妳唯一的任務：填入 LIFF ID ---
-            await liff.init({ liffId: "填入妳的LIFF_ID" }); 
-            // -------------------------------------
+            // --- ✅ 已幫妳填入 LIFF ID ---
+            await liff.init({ liffId: "2009047186-tHvmtEtD" }); 
+            // ---------------------------
             
             if (!liff.isLoggedIn()) { liff.login(); }
             
-            // 渲染題目與選項
             document.getElementById('question').innerText = params.get('q') || "題目載入失敗";
             document.getElementById('opt-A').innerText = "A. " + (params.get('a') || "---");
             document.getElementById('opt-B').innerText = "B. " + (params.get('b') || "---");
@@ -69,7 +68,7 @@
     }
 
     function select(el, val) {
-        if (document.getElementById('submit-btn').style.display === 'none') return; // 提交後不可再選
+        if (document.getElementById('submit-btn').style.display === 'none') return;
         chosen = val;
         document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
         el.classList.add('selected');
@@ -80,33 +79,25 @@
         const isCorrect = (chosen === correctAns);
         const resultArea = document.getElementById('result-area');
         
-        // 1. 顯示網頁結果 (更新為妳指定的文字與樣式)
         resultArea.style.display = 'block';
         if (isCorrect) {
-            resultArea.innerText = "綠色的: 正確! 靈氣點數上升"; // 妳指定的文字
+            resultArea.innerText = "正確! 靈氣點數上升"; 
             resultArea.className = "result-box result-correct";
         } else {
-            // 🌑 魔法：動態抓取正確選項的內容
-            // params.get(correctAns.toLowerCase()) 會把 'A' 變成 'a'，然後去抓 url 參數中的 q, a, b, c 內容
             const correctOptionText = params.get(correctAns.toLowerCase()) || "---"; 
-            
-            // 妳指定的文字 + 帶入正解
-            resultArea.innerText = `紅色的: 錯誤，正確答案是 ${correctAns}: ${correctOptionText}`; 
+            resultArea.innerText = `錯誤，正確答案是 ${correctAns}: ${correctOptionText}`; 
             resultArea.className = "result-box result-wrong";
         }
 
-        // 2. 切換按鈕
         document.getElementById('submit-btn').style.display = 'none';
         document.getElementById('confirm-btn').style.display = 'block';
 
-        // 3. 發送訊息回聊天室 (仍維持此邏輯以觸發 n8n)
         const msgText = isCorrect ? "星獸靈氣+20" : "再接再厲";
         liff.sendMessages([{ type: 'text', text: msgText }])
             .then(() => console.log("Sent:", msgText))
             .catch(err => {
                 console.error(err);
-                // 為了用戶體驗，即使發送失敗也提示一下
-                resultArea.innerText += "\n(訊息傳送失敗，請確認 chat_message.write 權限)";
+                resultArea.innerText += "\n(訊息傳送失敗，請檢查權限)";
             });
     }
 
