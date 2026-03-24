@@ -3,182 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>星獸靈氣挑戰</title>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <title>🌟 星獸靈氣挑戰</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        :root {
-            --primary-color: #6c5ce7;
-            --bg-color: #f0f2f5;
-        }
-        body {
-            font-family: "Microsoft JhengHei", sans-serif;
-            background-color: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .quiz-container {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-        h2 { color: var(--primary-color); margin-bottom: 25px; }
-        .question-text {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            text-align: left;
-            color: #2d3436;
-        }
-        .options { display: flex; flex-direction: column; gap: 15px; }
-        .option {
-            padding: 15px;
-            border: 2px solid #dfe6e9;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: left;
-            font-weight: bold;
-        }
-        .option:hover { border-color: var(--primary-color); background: #f9f9ff; }
-        .option.selected {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        #submit-btn {
-            margin-top: 30px;
-            width: 100%;
-            padding: 15px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        #submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
-        #loading-mask {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000; font-weight: bold; color: var(--primary-color);
-        }
+        :root { --primary: #6c5ce7; --secondary: #a29bfe; --success: #00b894; --fail: #d63031; --bg: #f9f9fb; }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+        .header { font-size: 1.2rem; color: var(--primary); font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
+        .question { font-size: 1.1rem; color: #2d3436; line-height: 1.6; margin-bottom: 25px; text-align: left; min-height: 60px; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .opt-btn { background: var(--bg); border: 2px solid transparent; padding: 15px; border-radius: 12px; font-size: 1rem; cursor: pointer; transition: 0.2s; text-align: left; color: #636e72; }
+        .opt-btn:hover { background: #f0f0f5; }
+        .opt-btn.selected { border-color: var(--primary); background: #f0edff; color: var(--primary); font-weight: bold; }
+        
+        .action-area { margin-top: 30px; }
+        .main-btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        #submit-btn { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3); }
+        #submit-btn:disabled { background: #dfe6e9; color: #b2bec3; cursor: not-allowed; box-shadow: none; }
+        #confirm-btn { background: var(--success); color: white; display: none; }
+
+        .result-box { margin-top: 20px; padding: 15px; border-radius: 12px; display: none; font-weight: bold; text-align: left; line-height: 1.5; }
+        .result-correct { background: #e6fcf5; color: var(--success); border: 1px solid var(--success); }
+        .result-wrong { background: #fff5f5; color: var(--fail); border: 1px solid var(--fail); }
     </style>
 </head>
 <body>
 
-<div id="loading-mask">🌟 正在開啟靈氣挑戰...</div>
-
-<div class="quiz-container">
-    <h2>🌟 靈氣挑戰</h2>
-    <div id="question" class="question-text">載入題目中...</div>
+<div class="card">
+    <div class="header">🔮 每日靈氣試煉</div>
+    <div id="question" class="question">正在感應靈氣題目...</div>
     
     <div class="options">
-        <div class="option" onclick="selectOption('A')" id="opt-A">
-            <span id="label-a">選項載入中...</span>
-        </div>
-        <div class="option" onclick="selectOption('B')" id="opt-B">
-            <span id="label-b">選項載入中...</span>
-        </div>
-        <div class="option" onclick="selectOption('C')" id="opt-C">
-            <span id="label-c">選項載入中...</span>
-        </div>
+        <div class="opt-btn" onclick="select(this, '(A)')" id="opt-A"></div>
+        <div class="opt-btn" onclick="select(this, '(B)')" id="opt-B"></div>
+        <div class="opt-btn" onclick="select(this, '(C)')" id="opt-C"></div>
     </div>
 
-    <button id="submit-btn" onclick="submitAnswer()" disabled>提交答案</button>
+    <div id="result-area" class="result-box"></div>
+
+    <div class="action-area">
+        <button id="submit-btn" class="main-btn" onclick="handleSubmit()" disabled>送出答案</button>
+        <button id="confirm-btn" class="main-btn" onclick="handleClose()">確認</button>
+    </div>
 </div>
 
 <script>
-    let selectedAnswer = "";
-    let currentAnswer = "";
-    let currentQid = "";
-    let currentUid = "";
-    let currentDate = "";
+    let chosen = '';
+    let currentAnswer = ''; // 🌟 用來儲存從 Webhook 抓到的正確答案
+    let params = new URLSearchParams(window.location.search);
+    const userId = params.get('uid'); 
+    const qid = params.get('qid'); 
 
-    // 🚀 初始化載入
-    window.onload = async function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const qid = urlParams.get('qid');
-        const uid = urlParams.get('uid');
-        
-        // 取得今天的日期 (格式 YYYY-MM-DD)
-        const now = new Date();
-        currentDate = now.toLocaleDateString('sv-SE'); // YYYY-MM-DD
-
-        if (qid && uid) {
-            try {
-                // 🛠️ 向妳的 n8n 「領題線」發送請求
+    async function init() {
+        try {
+            await liff.init({ liffId: "2009047186-tHvmtEtD" }); 
+            if (!liff.isLoggedIn()) { liff.login(); }
+            
+            if (qid) {
+                // 🚀 核心修改：向妳的「取題線」發送請求獲取完整資訊
                 const response = await fetch(`https://webbermars.app.n8n.cloud/webhook/get-question?qid=${qid}`);
                 const data = await response.json();
 
-                // 將抓到的題目資料填入網頁
-                document.getElementById('question').innerText = data.question;
-                document.getElementById('label-a').innerText = data.option_a;
-                document.getElementById('label-b').innerText = data.option_b;
-                document.getElementById('label-c').innerText = data.option_c;
-
-                // 儲存資訊供後續提交使用
-                currentAnswer = data.answer;
-                currentQid = qid;
-                currentUid = uid;
-
-                // 關閉遮罩
-                document.getElementById('loading-mask').style.display = 'none';
-            } catch (error) {
-                console.error("領取題目失敗:", error);
-                document.getElementById('question').innerText = "⚠️ 載入失敗，請關閉後重新開啟";
+                // 將抓到的資料填入對應欄位
+                document.getElementById('question').innerText = data.question || "題目載入失敗";
+                document.getElementById('opt-A').innerText = data.option_a || "---";
+                document.getElementById('opt-B').innerText = data.option_b || "---";
+                document.getElementById('opt-C').innerText = data.option_c || "---";
+                
+                // 存入全域變數供 handleSubmit 判斷
+                currentAnswer = data.answer; 
+            } else {
+                document.getElementById('question').innerText = "❌ 找不到題目編號";
             }
-        } else {
-            document.getElementById('question').innerText = "❌ 參數缺失，請從 LINE 開啟";
+        } catch (e) { 
+            console.error(e); 
+            document.getElementById('question').innerText = "感應失敗，請重新開啟";
         }
-    };
+    }
 
-    function selectOption(ans) {
-        selectedAnswer = `(${ans})`;
-        document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
-        document.getElementById(`opt-${ans}`).classList.add('selected');
+    function select(el, val) {
+        if (document.getElementById('submit-btn').style.display === 'none') return;
+        chosen = val;
+        document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
         document.getElementById('submit-btn').disabled = false;
     }
 
-    async function submitAnswer() {
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = true;
-        btn.innerText = "提交中...";
+    async function handleSubmit() {
+        // 🌟 修正：改用從 Webhook 抓到的 currentAnswer 進行判斷
+        const isCorrect = (chosen === currentAnswer);
+        const resultArea = document.getElementById('result-area');
+        
+        resultArea.style.display = 'block';
+        if (isCorrect) {
+            resultArea.innerText = "正確! 靈氣點數上升"; 
+            resultArea.className = "result-box result-correct";
+        } else {
+            resultArea.innerText = `錯誤，正確答案是 ${currentAnswer}`; 
+            resultArea.className = "result-box result-wrong";
+        }
 
-        const isCorrect = (selectedAnswer === currentAnswer);
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('confirm-btn').style.display = 'block';
 
-        // 🛠️ 提交到妳的 n8n 「提交線」
-        const submitData = {
-            userId: currentUid,
-            currentQid: currentQid,
-            isCorrect: isCorrect,
-            date: currentDate
-        };
+        const webhookUrl = "https://webbermars.app.n8n.cloud/webhook/quiz-submit"; 
 
         try {
-            await fetch('https://webbermars.app.n8n.cloud/webhook/quiz-submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(submitData)
+            const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
+
+            await fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: userId,
+                    isCorrect: isCorrect,
+                    currentQid: qid, 
+                    date: today
+                })
             });
-            alert(isCorrect ? "✨ 太棒了！答對了！" : "💪 再接再厲，下次會更好！");
-            liff.closeWindow();
-        } catch (e) {
-            alert("提交失敗，請檢查網路連線");
-            btn.disabled = false;
-            btn.innerText = "提交答案";
+            console.log("答案已同步至星獸大腦");
+        } catch (err) {
+            console.error("同步失敗", err);
         }
     }
+
+    function handleClose() {
+        liff.closeWindow();
+    }
+
+    init();
 </script>
 
 </body>
