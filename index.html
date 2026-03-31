@@ -1,110 +1,851 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>設定星盤資料</title>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; background-color: #f5f5f5; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; margin-bottom: 20px; }
-        label { display: block; margin: 15px 0 5px; color: #666; font-size: 14px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; margin-top: 30px; background-color: #06c755; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        button:active { background-color: #05b34c; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>設定星盤資料</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --gold:    #e8c96a;
+  --gold-d:  rgba(230,195,90,0.35);
+  --lavender: rgba(200,185,255,0.65);
+  --card-bg1: #0e0642;
+  --card-bg2: #08093a;
+  --card-bg3: #130848;
+}
+
+html, body {
+  min-height: 100%;
+  font-family: 'Nunito', 'PingFang TC', sans-serif;
+  background: #020009;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* ── Space Background ── */
+.space {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 12% 20%, rgba(110,35,200,0.32) 0%, transparent 62%),
+    radial-gradient(ellipse 45% 55% at 88% 78%, rgba(25,50,190,0.28) 0%, transparent 62%),
+    radial-gradient(ellipse 38% 32% at 68% 12%, rgba(15,110,175,0.20) 0%, transparent 56%),
+    radial-gradient(ellipse 42% 40% at 30% 85%, rgba(95,18,175,0.22) 0%, transparent 58%),
+    #020009;
+}
+
+#sky { position:fixed; inset:0; z-index:1;  pointer-events:none; }
+#cns { position:fixed; inset:0; z-index:20; pointer-events:none; }
+
+/* ── Page ── */
+.page {
+  position: relative; z-index: 10;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 36px 16px 64px;
+}
+
+/* ── Floating Card ── */
+.card {
+  width: 100%; max-width: 430px;
+  background: linear-gradient(145deg,
+    var(--card-bg1) 0%,
+    var(--card-bg2) 35%,
+    var(--card-bg3) 65%,
+    #0b0540 100%);
+  background-size: 300% 300%;
+  animation: card-shift 20s ease infinite;
+  border-radius: 28px;
+  border: 1px solid rgba(185,155,255,0.55);
+  box-shadow:
+    0 0 0 1px rgba(200,170,255,0.18),
+    0 0 22px rgba(140,90,255,0.22),
+    0 6px 20px rgba(0,0,0,0.55),
+    0 20px 50px rgba(12,0,55,0.50),
+    0 45px 90px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.09),
+    inset 0 -1px 0 rgba(0,0,0,0.25);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  overflow: hidden;
+  position: relative;
+}
+@keyframes card-shift {
+  0%   { background-position:   0% 50%; }
+  33%  { background-position: 100% 20%; }
+  66%  { background-position:  40% 95%; }
+  100% { background-position:   0% 50%; }
+}
+/* Top shimmer line */
+.card::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(210,180,255,0.4) 25%,
+    rgba(240,220,255,0.85) 50%,
+    rgba(210,180,255,0.4) 75%, transparent 100%);
+  background-size: 200%;
+  animation: shimmer-line 5s ease-in-out infinite;
+}
+@keyframes shimmer-line {
+  0%,100% { background-position: -100%; opacity:.5; }
+  50%      { background-position:  200%; opacity:1;  }
+}
+
+/* ── Card Header ── */
+.card-head {
+  padding: 34px 28px 14px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+  position: relative;
+}
+.card-title {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: clamp(1.28rem, 5vw, 1.72rem);
+  color: var(--gold);
+  letter-spacing: .08em;
+  text-shadow: 0 0 28px rgba(232,200,80,0.50), 0 2px 6px rgba(0,0,0,0.5);
+  line-height: 1.4;
+}
+.card-sub {
+  margin-top: 6px;
+  font-family: 'Cinzel', serif;
+  font-size: .68rem;
+  color: rgba(200,185,255,0.50);
+  letter-spacing: .30em;
+  text-transform: uppercase;
+}
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  width: 72%; margin: 8px auto 0;
+}
+.divider::before { content:''; flex:1; height:1px; background: linear-gradient(to right,  transparent, var(--gold-d)); }
+.divider::after  { content:''; flex:1; height:1px; background: linear-gradient(to left,   transparent, var(--gold-d)); }
+.divider span { color: rgba(220,185,80,0.65); font-size:.62rem; letter-spacing:.2em; }
+
+/* ── Card Body ── */
+.card-body {
+  padding: 16px 22px 32px;
+  display: flex; flex-direction: column; gap: 14px;
+  background: linear-gradient(168deg,
+    rgba(22,6,72,0.88) 0%,
+    rgba(10,10,60,0.92) 30%,
+    rgba(16,4,68,0.90) 55%,
+    rgba(8,12,50,0.88) 80%,
+    rgba(18,6,64,0.85) 100%);
+  border-top: 1px solid rgba(167,139,250,0.15);
+  box-shadow: inset 0 2px 20px rgba(80,40,200,0.10);
+}
+
+/* Individual field box */
+.fbox {
+  background: rgba(255,255,255,0.052);
+  border: 1px solid rgba(185,160,255,0.28);
+  border-radius: 14px;
+  padding: 13px 16px 12px;
+  transition: border-color .22s, background .22s, box-shadow .22s, transform .22s;
+  will-change: transform;
+}
+.fbox:focus-within {
+  border-color: #a78bfa;
+  background: rgba(167,139,250,0.09);
+  box-shadow:
+    0 0 0 2px rgba(167,139,250,0.20),
+    0 6px 24px rgba(100,60,220,0.22),
+    0 2px 8px rgba(0,0,0,0.30);
+  transform: translateY(-3px);
+}
+.flabel {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: .74rem;
+  color: #b89eff;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+  pointer-events: none;
+  text-shadow: 0 0 10px rgba(170,130,255,0.40);
+}
+.finput {
+  width: 100%;
+  background: transparent;
+  border: none; outline: none;
+  color: #fff;
+  font-size: .96rem;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  padding: 0;
+  -webkit-appearance: none; appearance: none;
+}
+.finput::placeholder { color: rgba(255,255,255,0.30); font-weight:400; }
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(.7) opacity(.45);
+  cursor: pointer;
+}
+
+/* Date + Time row */
+.frow { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+/* Gender pills inside its own fbox */
+.gpills {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 9px;
+  margin-top: 2px;
+}
+.g-radio { display: none; }
+.g-pill {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 10px 4px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(200,185,255,0.18);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: border-color .22s, background .22s, box-shadow .22s, color .22s;
+  font-size: .80rem; font-weight: 700;
+  color: rgba(255,255,255,0.72);
+  user-select: none;
+}
+.g-pill .gi { font-size: 1.25rem; line-height:1; }
+.g-radio:checked + .g-pill {
+  border-color: rgba(225,188,75,0.70);
+  background: rgba(225,188,75,0.12);
+  color: var(--gold);
+  box-shadow: 0 0 14px rgba(225,188,75,0.16);
+}
+
+/* ── Zodiac Ticker ── */
+.zodiac-ticker {
+  overflow: hidden;
+  position: relative;
+  height: 30px;
+  margin: 10px 0 4px;
+  mask-image: linear-gradient(90deg, transparent 0%, black 16%, black 84%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 16%, black 84%, transparent 100%);
+}
+.zodiac-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: zodiac-scroll 22s linear infinite;
+}
+@keyframes zodiac-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.zodiac-sign {
+  font-size: 1.05rem;
+  padding: 0 11px;
+  line-height: 30px;
+  color: rgba(180,155,255,0.32);
+  user-select: none;
+  display: inline-block;
+  transition: color .28s, transform .28s;
+}
+.zodiac-sign.active {
+  color: rgba(215, 198, 255, 0.85);
+  transform: scale(1.10);
+}
+.zodiac-sign.active-center {
+  color: #ffffff;
+  transform: scale(1.30);
+}
+
+/* Submit – bright light purple */
+.btn-submit {
+  width: 100%;
+  padding: 15px;
+  margin-top: 6px;
+  background: rgba(155,120,255,0.30);
+  border: 1.5px solid rgba(200,175,255,0.72);
+  border-radius: 14px;
+  color: #ead8ff;
+  font-size: .98rem;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: .20em;
+  cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: transform .20s, box-shadow .25s, border-color .25s, color .25s, background .25s;
+}
+.btn-submit:hover {
+  border-color: #e8c96a;
+  color: #e8c96a;
+  background: rgba(232,201,106,0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(232,201,106,0.20), 0 6px 20px rgba(0,0,0,0.22);
+}
+.btn-submit:active { transform: translateY(0); }
+.btn-submit.loading { pointer-events:none; opacity:.72; }
+.btn-submit.loading .btn-text { display:none; }
+.btn-spinner {
+  display:none; width:17px; height:17px; margin:0 auto;
+  border:2px solid rgba(255,255,255,.28); border-top-color:#fff;
+  border-radius:50%; animation:spin .7s linear infinite;
+}
+.btn-submit.loading .btn-spinner { display:block; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.footer-note {
+  text-align:center; margin-top:14px;
+  font-size:.68rem; color:rgba(255,255,255,0.38);
+  letter-spacing:.07em; line-height:1.8;
+}
+
+/* ── Modal ── */
+.overlay {
+  position:fixed; inset:0; z-index:1000;
+  background:rgba(1,0,10,0.88);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  opacity:0; pointer-events:none;
+  transition:opacity .28s ease;
+}
+.overlay.open { opacity:1; pointer-events:all; }
+.modal {
+  background: linear-gradient(155deg, #160840, #090426);
+  border: 1px solid rgba(200,170,255,0.28);
+  border-radius: 22px;
+  padding: 30px 24px 24px;
+  max-width: 350px; width:100%;
+  box-shadow: 0 0 60px rgba(100,30,220,0.28);
+  transform: scale(.88) translateY(20px);
+  transition: transform .32s cubic-bezier(.34,1.56,.64,1);
+}
+.overlay.open .modal { transform:scale(1) translateY(0); }
+.modal-icon { text-align:center; font-size:2rem; margin-bottom:8px; }
+.modal-title {
+  font-family:'Cinzel',serif; font-size:.86rem; font-weight:600;
+  color:var(--gold); text-align:center; letter-spacing:.18em; margin-bottom:18px;
+}
+.modal-body {
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px; padding:13px 15px; margin-bottom:18px;
+}
+.mrow {
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:.86rem;
+}
+.mrow:last-child { border-bottom:none; }
+.mrow .mk { color:rgba(200,185,255,0.58); font-size:.78rem; }
+.mrow .mv { color:#fff; font-weight:700; }
+.modal-btns { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+.mbtn {
+  padding:11px; border-radius:10px;
+  font-size:.88rem; font-family:'Nunito',sans-serif;
+  font-weight:700; cursor:pointer; border:none;
+  transition:all .2s ease; letter-spacing:.06em;
+}
+.mbtn-cancel {
+  background:rgba(255,255,255,0.07); color:rgba(255,255,255,.7);
+  border:1px solid rgba(255,255,255,0.12);
+}
+.mbtn-cancel:hover { background:rgba(255,255,255,0.13); color:#fff; }
+.mbtn-ok {
+  background:linear-gradient(135deg,#8B5CF6,#6D28D9);
+  color:#fff; border:1px solid rgba(225,188,75,0.30);
+}
+.mbtn-ok:hover { box-shadow:0 4px 20px rgba(109,40,217,.45); }
+
+/* ── RWD ── */
+@media (max-width: 640px) {
+  #cns { z-index: 2; }   /* behind card on mobile */
+}
+@media (max-width: 400px) {
+  .card-head { padding:26px 18px 12px; }
+  .card-body { padding:14px 14px 22px; }
+  .frow { grid-template-columns:1fr; }
+}
+@media (min-width: 641px) { .page { padding-top:52px; } }
+</style>
 </head>
 <body>
-    <div class="card">
-        <h2>🔮 開啟您的魔法旅程</h2>
-        
-        <label>🏷️ 您的暱稱</label>
-        <input type="text" id="nickname" placeholder="ex:小明" required>
 
-        <label>📅 出生日期</label>
-        <input type="date" id="date" required>
-        
-        <label>⏰ 出生時間</label>
-        <input type="time" id="time" required>
-        
-        <label>📍 出生城市</label>
-        <input type="text" id="city" placeholder="例如：台北市" value="台北市">
+<div class="space"></div>
+<canvas id="sky"></canvas>
+<canvas id="cns"></canvas>
 
-        <label>👤 性別</label>
-        <select id="gender" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white;">
-            <option value="F">女性</option>
-            <option value="M">男性</option>
-            <option value="U">不透露</option>
-        </select>
+<div class="page">
+  <div class="card">
 
-        <button id="btn" onclick="send()">確認送出</button>
+    <!-- Header -->
+    <div class="card-head">
+      <h1 class="card-title">🔮 開啟您的魔法旅程</h1>
+      <p class="card-sub">Celestial Chart · 星盤登錄</p>
+      <div class="zodiac-ticker"><div class="zodiac-track" id="zodiacTrack"></div></div>
+      <div class="divider"><span>✦</span></div>
     </div>
 
-    <script>
-        const LIFF_ID = "2009047186-VUUAVTF4";
-        // 這裡要填入您主工作流中「新 Webhook」的 Production URL
-        const WEBHOOK_URL = "https://webbermars.app.n8n.cloud/webhook/liff-register"; 
+    <!-- Form Body -->
+    <div class="card-body">
 
-        liff.init({ liffId: LIFF_ID }).catch(err => {
-            alert("啟動失敗");
-        });
+      <!-- 暱稱 -->
+      <div class="fbox">
+        <span class="flabel">您的暱稱</span>
+        <input type="text" id="nickname" class="finput" placeholder="ex:小明" required autocomplete="off">
+      </div>
 
-    async function send() {
-        // 獲取各欄位數值，包含新增的 nickname
-        const nick = document.getElementById('nickname').value;
-        const d = document.getElementById('date').value;
-        const t = document.getElementById('time').value;
-        const c = document.getElementById('city').value;
-        const g = document.getElementById('gender').value;
+      <!-- 日期 + 時間 -->
+      <div class="frow">
+        <div class="fbox">
+          <span class="flabel">出生日期</span>
+          <input type="date" id="date" class="finput" required>
+        </div>
+        <div class="fbox">
+          <span class="flabel">出生時間</span>
+          <input type="time" id="time" class="finput" required>
+        </div>
+      </div>
 
-        // 驗證是否填寫完整
-        if (!nick || !d || !t || !c || !g) {
-            alert("請完整填寫資料喔！");
-            return;
-        }
+      <!-- 城市 -->
+      <div class="fbox">
+        <span class="flabel">出生城市</span>
+        <input type="text" id="city" class="finput" placeholder="例如：台北市" value="台北市" required autocomplete="off">
+      </div>
 
-        const [hour, minute] = t.split(':');
-        const h = parseInt(hour);
-        const period = h >= 12 ? "下午 (PM)" : "上午 (AM)";
-        const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-        const genderText = { "F": "女性", "M": "男性", "U": "不透露/中性" }[g];
-    
-        // 在確認視窗中加入暱稱顯示
-        if (!confirm(`確認送出資料嗎？\n暱稱：${nick}\n日期：${d}\n時間：${period} ${displayH}:${minute}\n城市：${c}\n性別：${genderText}`)) {
-            return;
-        }
+      <!-- 性別 -->
+      <div class="fbox">
+        <span class="flabel">性別</span>
+        <div class="gpills">
+          <div>
+            <input type="radio" id="gF" name="gender" value="F" class="g-radio" checked>
+            <label for="gF" class="g-pill"><span class="gi">♀</span><span>女性</span></label>
+          </div>
+          <div>
+            <input type="radio" id="gM" name="gender" value="M" class="g-radio">
+            <label for="gM" class="g-pill"><span class="gi">♂</span><span>男性</span></label>
+          </div>
+          <div>
+            <input type="radio" id="gU" name="gender" value="U" class="g-radio">
+            <label for="gU" class="g-pill"><span class="gi">⚧</span><span>不透露</span></label>
+          </div>
+        </div>
+      </div>
 
-        try {
-            // 獲取使用者 userId
-            const profile = await liff.getProfile();
-            const userId = profile.userId;
+      <!-- Submit -->
+      <button class="btn-submit" id="btn" onclick="send()">
+        <span class="btn-text">確認送出</span>
+        <div class="btn-spinner"></div>
+      </button>
 
-            // 透過 API 傳送資料給 n8n
-            const response = await fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    nickname: nick, // 將暱稱傳送至後端
-                    date: d,
-                    time: t,
-                    city: c,
-                    gender: g,
-                    type: "api_registration" // 標註這是從 API 來的
-                })
-            });
+      <p class="footer-note">您的資料將被安全存儲，僅用於星盤解讀與命運占卜。</p>
+    </div>
+  </div>
+</div>
 
-            if (response.ok) {
-                // 成功後直接關閉
-                liff.closeWindow();
-            } else {
-                alert("傳送失敗，請聯繫管理員");
-            }
-        } catch (err) {
-            alert("錯誤: " + err.message);
-        }
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-icon">🌟</div>
+    <div class="modal-title">確認送出資料嗎？</div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeModal()">重新填寫</button>
+      <button class="mbtn mbtn-ok"     onclick="confirmSend()">確認送出</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LIFF_ID     = "2009047186-VUUAVTF4";
+const WEBHOOK_URL = "https://webbermars.app.n8n.cloud/webhook/liff-register";
+
+liff.init({ liffId: LIFF_ID }).catch(err => console.warn("LIFF:", err));
+
+
+/* ── Zodiac Ticker ── */
+(function() {
+  const signs = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+  const track = document.getElementById('zodiacTrack');
+  // 4 copies so -50% translateX seamlessly loops
+  const total = [...signs, ...signs, ...signs, ...signs];
+  track.innerHTML = total.map(s => `<span class="zodiac-sign">${s}</span>`).join('');
+
+  const ticker = document.querySelector('.zodiac-ticker');
+  const allSigns = track.querySelectorAll('.zodiac-sign');
+  function updateActive() {
+    const tcr = ticker.getBoundingClientRect();
+    const tcx = tcr.left + tcr.width / 2;
+    // Sort all signs by distance from center
+    const sorted = Array.from(allSigns).map(s => {
+      const r  = s.getBoundingClientRect();
+      return { s, d: Math.abs(r.left + r.width / 2 - tcx) };
+    }).sort((a, b) => a.d - b.d);
+
+    allSigns.forEach(s => s.classList.remove('active', 'active-center'));
+    // Light up closest 3; mark the closest as active-center
+    sorted.slice(0, 3).forEach(({ s }) => s.classList.add('active'));
+    if (sorted[0]) sorted[0].s.classList.add('active-center');
+
+    requestAnimationFrame(updateActive);
+  }
+  requestAnimationFrame(updateActive);
+})();
+
+/* ══════════════════════════════════════
+   STARFIELD + CONSTELLATIONS + METEORS
+══════════════════════════════════════ */
+(function () {
+  const cv   = document.getElementById('sky');
+  const ctx  = cv.getContext('2d');
+  const cvC  = document.getElementById('cns');       // constellation canvas (above card)
+  const cCtx = cvC.getContext('2d');
+  let W, H, bgStars = [], meteors = [], lastMeteor = -9999;
+
+  /* ── Constellation data
+     Desktop safe zones: left rx 0.05-0.28, right rx 0.72-0.95
+     On mobile (#cns z-index:2) they appear behind the card naturally.
+  ── */
+  const CONSTS = [
+    /* 金牛座 Taurus – left upper: Pleiades cluster + Hyades V + horns */
+    {
+      color: [255, 222, 180],
+      stars: [
+        { rx:.080, ry:.080, mag:1.4 }, // 0 Alcyone  (Pleiades)
+        { rx:.098, ry:.070, mag:1.3 }, // 1 Pleione   (Pleiades)
+        { rx:.113, ry:.082, mag:1.3 }, // 2 Merope    (Pleiades)
+        { rx:.130, ry:.175, mag:1.8 }, // 3 γ Tau     (Hyades top-left)
+        { rx:.162, ry:.160, mag:1.8 }, // 4 δ Tau     (Hyades top-right)
+        { rx:.118, ry:.248, mag:1.8 }, // 5 ε Tau     (Hyades bottom-left)
+        { rx:.195, ry:.232, mag:3.8 }, // 6 Aldebaran (BRIGHT, right corner)
+        { rx:.218, ry:.088, mag:2.2 }, // 7 β Tau     (north horn tip)
+        { rx:.260, ry:.172, mag:1.8 }, // 8 ζ Tau     (south horn tip)
+      ],
+      lines: [[0,1],[1,2],[2,3],[3,5],[5,6],[3,4],[4,6],[4,7],[6,8]]
+    },
+
+    /* 射手座 Sagittarius – left lower: teapot shape */
+    {
+      color: [255, 210, 155],
+      stars: [
+        { rx:.158, ry:.520, mag:2.5 }, // 0 λ Sgr    (lid top)
+        { rx:.090, ry:.528, mag:2.0 }, // 1 φ Sgr    (handle top)
+        { rx:.162, ry:.580, mag:2.2 }, // 2 δ Sgr    (body upper)
+        { rx:.218, ry:.598, mag:2.0 }, // 3 γ Sgr    (spout tip)
+        { rx:.185, ry:.648, mag:3.8 }, // 4 ε Sgr    (Kaus Australis, BRIGHT)
+        { rx:.082, ry:.660, mag:1.8 }, // 5 τ Sgr    (handle bottom)
+        { rx:.222, ry:.718, mag:2.0 }, // 6 ζ Sgr    (lower body)
+        { rx:.145, ry:.748, mag:1.8 }, // 7 δ Sgr lower
+        { rx:.260, ry:.665, mag:2.2 }, // 8 σ Sgr    (Nunki)
+      ],
+      lines: [[0,1],[0,2],[2,3],[3,4],[4,5],[5,1],[4,6],[6,7],[4,8]]
+    },
+
+    /* 處女座 Virgo – right upper: Spica + branching arms */
+    {
+      color: [210, 225, 255],
+      stars: [
+        { rx:.875, ry:.412, mag:4.0 }, // 0 Spica (α Vir)  VERY BRIGHT
+        { rx:.845, ry:.330, mag:2.5 }, // 1 γ Vir (Porrima)
+        { rx:.800, ry:.265, mag:2.0 }, // 2 η Vir
+        { rx:.762, ry:.205, mag:2.0 }, // 3 β Vir (Zavijava)
+        { rx:.815, ry:.192, mag:2.0 }, // 4 δ Vir
+        { rx:.872, ry:.185, mag:2.2 }, // 5 ε Vir (Vindemiatrix)
+        { rx:.910, ry:.268, mag:1.8 }, // 6 μ Vir
+        { rx:.938, ry:.345, mag:1.8 }, // 7 ι Vir
+        { rx:.752, ry:.315, mag:1.6 }, // 8 θ Vir
+      ],
+      lines: [[0,1],[1,2],[2,3],[2,4],[4,5],[5,6],[6,7],[7,0],[1,6],[2,8]]
+    },
+
+    /* 寶瓶座 Aquarius – right lower: Y-branch + flowing streams */
+    {
+      color: [175, 215, 255],
+      stars: [
+        { rx:.842, ry:.548, mag:3.2 }, // 0 β Aqr (Sadalsuud) BRIGHT
+        { rx:.878, ry:.610, mag:2.2 }, // 1 α Aqr (Sadalmelik)
+        { rx:.808, ry:.610, mag:1.8 }, // 2 κ Aqr
+        { rx:.900, ry:.670, mag:1.8 }, // 3 ε Aqr
+        { rx:.860, ry:.718, mag:1.8 }, // 4 μ Aqr
+        { rx:.820, ry:.762, mag:1.6 }, // 5 ν Aqr
+        { rx:.780, ry:.720, mag:1.6 }, // 6 ζ Aqr
+        { rx:.758, ry:.672, mag:1.8 }, // 7 γ Aqr (Sadachbia)
+        { rx:.852, ry:.808, mag:1.8 }, // 8 δ Aqr
+      ],
+      lines: [[0,1],[0,2],[1,3],[3,4],[4,5],[2,7],[7,6],[6,5],[4,8]]
     }
-    </script>
+  ];
+
+  /* ── Build random background stars ── */
+  function buildBgStars() {
+    bgStars = [];
+    const n = Math.floor((W * H) / 4200);
+    for (let i = 0; i < n; i++) {
+      // ~30% of stars twinkle fast & dramatically, rest are slower
+      const fast = Math.random() < 0.3;
+      bgStars.push({
+        x:     Math.random() * W,
+        y:     Math.random() * H,
+        r:     Math.random() * 1.45 + 0.28,
+        phase: Math.random() * Math.PI * 2,
+        spd:   fast ? (Math.random() * 0.004 + 0.002) : (Math.random() * 0.0008 + 0.0002),
+        minA:  fast ? 0.05 : 0.22,  // fast stars dip closer to invisible
+        maxA:  1.0
+      });
+    }
+  }
+
+  /* ── Spawn meteor (top-left → bottom-right, random start across full screen) ── */
+  function spawnMeteor() {
+    const ang = (33 + Math.random() * 18) * Math.PI / 180;
+    const spd = 9 + Math.random() * 8;
+    // Divide screen into zones so meteors appear on both halves
+    const zone = Math.random();
+    let sx, sy;
+    if (zone < 0.4) {
+      // left quarter — clearly visible on left side
+      sx = Math.random() * W * 0.30;
+      sy = Math.random() * H * 0.55;
+    } else if (zone < 0.75) {
+      // center
+      sx = W * 0.25 + Math.random() * W * 0.35;
+      sy = Math.random() * H * 0.45;
+    } else {
+      // upper portion full width
+      sx = Math.random() * W * 0.80;
+      sy = Math.random() * H * 0.20;
+    }
+    meteors.push({
+      x:     sx,
+      y:     sy,
+      vx:    Math.cos(ang) * spd,
+      vy:    Math.sin(ang) * spd,
+      len:   160 + Math.random() * 130,
+      life:  1.0,
+      decay: 0.010 + Math.random() * 0.007
+    });
+  }
+
+  /* ── Draw meteors ── */
+  function drawMeteors() {
+    meteors.forEach(m => {
+      if (m.life <= 0) return;
+      const spd = Math.hypot(m.vx, m.vy);
+      const tx = m.x - (m.vx / spd) * m.len;
+      const ty = m.y - (m.vy / spd) * m.len;
+      const g  = ctx.createLinearGradient(m.x, m.y, tx, ty);
+      g.addColorStop(0,   `rgba(255,255,245,${m.life.toFixed(2)})`);
+      g.addColorStop(0.18,`rgba(215,195,255,${(m.life * 0.75).toFixed(2)})`);
+      g.addColorStop(1,   'rgba(160,140,255,0)');
+      ctx.save();
+      ctx.strokeStyle = g;
+      ctx.lineWidth   = 3.0 * m.life;
+      ctx.lineCap     = 'round';
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+      ctx.restore();
+      // bright head dot
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, 2.5 * m.life, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${m.life.toFixed(2)})`;
+      ctx.shadowColor = 'rgba(220,200,255,0.9)';
+      ctx.shadowBlur  = 10;
+      ctx.fill();
+      ctx.restore();
+
+      m.x    += m.vx;
+      m.y    += m.vy;
+      m.life -= m.decay;
+    });
+    for (let i = meteors.length - 1; i >= 0; i--)
+      if (meteors[i].life <= 0) meteors.splice(i, 1);
+  }
+
+  /* ── Cross spike (drawn on constellation canvas) ── */
+  function drawSpike(x, y, size, alpha, r, g, b) {
+    const len = size * 3.2;
+    cCtx.save();
+    cCtx.lineCap = 'round';
+    const gh = cCtx.createLinearGradient(x - len, y, x + len, y);
+    gh.addColorStop(0,   'transparent');
+    gh.addColorStop(0.5, `rgba(${r},${g},${b},${(alpha * 0.7).toFixed(3)})`);
+    gh.addColorStop(1,   'transparent');
+    cCtx.strokeStyle = gh; cCtx.lineWidth = 1.0;
+    cCtx.beginPath(); cCtx.moveTo(x - len, y); cCtx.lineTo(x + len, y); cCtx.stroke();
+    const gv = cCtx.createLinearGradient(x, y - len, x, y + len);
+    gv.addColorStop(0,   'transparent');
+    gv.addColorStop(0.5, `rgba(${r},${g},${b},${(alpha * 0.7).toFixed(3)})`);
+    gv.addColorStop(1,   'transparent');
+    cCtx.strokeStyle = gv;
+    cCtx.beginPath(); cCtx.moveTo(x, y - len); cCtx.lineTo(x, y + len); cCtx.stroke();
+    cCtx.restore();
+  }
+
+  /* ── Draw one constellation (on overlay canvas, appears above card) ── */
+  function drawConst(c, ts) {
+    const [r, g, b] = c.color;
+    const pts = c.stars.map(s => ({ x: s.rx * W, y: s.ry * H, mag: s.mag }));
+
+    /* Connection lines */
+    c.lines.forEach(([a, b_]) => {
+      const ax = pts[a].x, ay = pts[a].y;
+      const bx = pts[b_].x, by = pts[b_].y;
+      // glow layer
+      cCtx.save();
+      cCtx.strokeStyle = `rgba(${r},${g},${b},0.18)`;
+      cCtx.lineWidth   = 3.5;
+      cCtx.filter      = 'blur(2px)';
+      cCtx.beginPath(); cCtx.moveTo(ax, ay); cCtx.lineTo(bx, by); cCtx.stroke();
+      cCtx.restore();
+      // sharp line
+      const grd = cCtx.createLinearGradient(ax, ay, bx, by);
+      grd.addColorStop(0,   `rgba(${r},${g},${b},0.55)`);
+      grd.addColorStop(0.5, `rgba(${r},${g},${b},0.82)`);
+      grd.addColorStop(1,   `rgba(${r},${g},${b},0.55)`);
+      cCtx.save();
+      cCtx.strokeStyle = grd; cCtx.lineWidth = 1.1;
+      cCtx.beginPath(); cCtx.moveTo(ax, ay); cCtx.lineTo(bx, by); cCtx.stroke();
+      cCtx.restore();
+    });
+
+    /* Stars */
+    pts.forEach((p, i) => {
+      const pulse = 0.68 + 0.32 * Math.sin(ts * 0.00090 + i * 1.62);
+      const base  = p.mag * 1.15;
+
+      const h1 = cCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, base * 4.5);
+      h1.addColorStop(0,   `rgba(${r},${g},${b},${(0.28 * pulse).toFixed(3)})`);
+      h1.addColorStop(0.5, `rgba(${r},${g},${b},${(0.10 * pulse).toFixed(3)})`);
+      h1.addColorStop(1,   'transparent');
+      cCtx.beginPath(); cCtx.arc(p.x, p.y, base * 4.5, 0, Math.PI * 2);
+      cCtx.fillStyle = h1; cCtx.fill();
+
+      const h2 = cCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, base * 1.8);
+      h2.addColorStop(0,   `rgba(255,255,255,${(0.92 * pulse).toFixed(3)})`);
+      h2.addColorStop(0.6, `rgba(${r},${g},${b},${(0.55 * pulse).toFixed(3)})`);
+      h2.addColorStop(1,   'transparent');
+      cCtx.beginPath(); cCtx.arc(p.x, p.y, base * 1.8, 0, Math.PI * 2);
+      cCtx.fillStyle = h2; cCtx.fill();
+
+      cCtx.beginPath(); cCtx.arc(p.x, p.y, base * 0.55, 0, Math.PI * 2);
+      cCtx.fillStyle = `rgba(255,255,255,${(0.98 * pulse).toFixed(3)})`;
+      cCtx.fill();
+
+      if (p.mag >= 2.5) drawSpike(p.x, p.y, base, pulse, r, g, b);
+    });
+  }
+
+  /* ── Animation loop ── */
+  function frame(ts) {
+    ctx.clearRect(0, 0, W, H);
+    cCtx.clearRect(0, 0, W, H);
+
+    /* Background stars – with dramatic twinkle for fast stars */
+    bgStars.forEach(s => {
+      const t01 = 0.5 + 0.5 * Math.sin(s.phase + ts * s.spd);
+      const a   = s.minA + (s.maxA - s.minA) * t01;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,252,235,${a.toFixed(3)})`;
+      ctx.fill();
+    });
+
+    /* Meteors */
+    if (ts - lastMeteor > 2400 + Math.random() * 4200) {
+      spawnMeteor();
+      lastMeteor = ts;
+    }
+    drawMeteors();
+
+    /* Constellations */
+    CONSTS.forEach(c => drawConst(c, ts));
+
+    requestAnimationFrame(frame);
+  }
+
+  function resize() {
+    W = cv.width  = cvC.width  = window.innerWidth;
+    H = cv.height = cvC.height = window.innerHeight;
+    buildBgStars();
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  requestAnimationFrame(frame);
+})();
+
+/* ══════════════════════════════════════
+   FORM LOGIC
+══════════════════════════════════════ */
+let _pending = null;
+
+function openModal(data) {
+  _pending = data;
+  const [hh, mm] = data.t.split(':');
+  const h       = parseInt(hh);
+  const period  = h >= 12 ? '下午 (PM)' : '上午 (AM)';
+  const dispH   = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+  document.getElementById('modalBody').innerHTML = `
+    <div class="mrow"><span class="mk">暱稱</span><span class="mv">${data.nick}</span></div>
+    <div class="mrow"><span class="mk">日期</span><span class="mv">${data.d}</span></div>
+    <div class="mrow"><span class="mk">時間</span><span class="mv">${period} ${dispH}:${mm}</span></div>
+    <div class="mrow"><span class="mk">城市</span><span class="mv">${data.c}</span></div>
+    <div class="mrow"><span class="mk">性別</span><span class="mv">${data.gText}</span></div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+  _pending = null;
+}
+
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target.id === 'overlay') closeModal();
+});
+
+async function confirmSend() {
+  if (!_pending) return;
+  const data = _pending;
+  closeModal();
+  const btn = document.getElementById('btn');
+  btn.classList.add('loading');
+  try {
+    const profile = await liff.getProfile();
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId:   profile.userId,
+        nickname: data.nick,
+        date:     data.d,
+        time:     data.t,
+        city:     data.c,
+        gender:   data.g,
+        type:     "api_registration"
+      })
+    });
+    if (res.ok) {
+      liff.closeWindow();
+    } else {
+      alert("傳送失敗，請聯繫管理員");
+      btn.classList.remove('loading');
+    }
+  } catch (err) {
+    alert("錯誤: " + err.message);
+    btn.classList.remove('loading');
+  }
+}
+
+function send() {
+  const nick = document.getElementById('nickname').value.trim();
+  const d    = document.getElementById('date').value;
+  const t    = document.getElementById('time').value;
+  const c    = document.getElementById('city').value.trim();
+  const g    = document.querySelector('input[name="gender"]:checked').value;
+  if (!nick || !d || !t || !c || !g) {
+    alert("請完整填寫資料喔！");
+    return;
+  }
+  const gText = { "F":"女性", "M":"男性", "U":"不透露/中性" }[g];
+  openModal({ nick, d, t, c, g, gText });
+}
+</script>
 </body>
 </html>
