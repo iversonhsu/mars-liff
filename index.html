@@ -140,8 +140,8 @@ html, body {
   line-height: 1.4;
 }
 @keyframes sub-breathe {
-  0%, 100% { opacity: 0.45; }
-  50%       { opacity: 1.00; }
+  0%, 100% { opacity: 0.38; color: rgba(200,185,255,0.50); }
+  50%       { opacity: 1.00; color: rgba(230,215,255,1.00); }
 }
 .card-sub {
   margin-top: 6px;
@@ -150,7 +150,7 @@ html, body {
   color: rgba(200,185,255,0.50);
   letter-spacing: .30em;
   text-transform: uppercase;
-  animation: sub-breathe 3s ease-in-out infinite;
+  animation: sub-breathe 6s ease-in-out infinite;
 }
 .divider {
   display: flex; align-items: center; gap: 12px;
@@ -230,7 +230,7 @@ input[type="time"].finput {
   -webkit-text-fill-color: #fff;
   min-height: 1.5em;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   padding-right: 26px;
   background-repeat: no-repeat;
   background-position: right 2px center;
@@ -436,7 +436,6 @@ input[type="time"]::-webkit-calendar-picker-indicator {
       <h1 class="card-title">🔮 開啟您的魔法旅程</h1>
       <p class="card-sub">Celestial Chart · 星盤登錄</p>
       <div class="zodiac-ticker"><div class="zodiac-track" id="zodiacTrack"></div></div>
-      <div class="divider"><span>✦</span></div>
     </div>
 
     <!-- Form Body -->
