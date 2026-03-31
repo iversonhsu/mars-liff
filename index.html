@@ -141,20 +141,26 @@ html, body {
 }
 
 /* Individual field box */
+@keyframes fbox-breathe {
+  0%,100% { border-color: rgba(185,160,255,0.28); box-shadow: 0 0 0 0 rgba(167,139,250,0); }
+  50%      { border-color: rgba(185,160,255,0.60); box-shadow: 0 0 10px 2px rgba(167,139,250,0.14); }
+}
 .fbox {
   background: rgba(255,255,255,0.052);
   border: 1px solid rgba(185,160,255,0.28);
   border-radius: 14px;
   padding: 13px 16px 12px;
-  transition: border-color .22s, background .22s, box-shadow .22s, transform .22s;
+  transition: border-color .30s, background .30s, box-shadow .30s, transform .25s;
   will-change: transform;
+  animation: fbox-breathe 3.2s ease-in-out infinite;
 }
 .fbox:focus-within {
-  border-color: #a78bfa;
-  background: rgba(167,139,250,0.09);
+  animation: none;
+  border-color: var(--gold);
+  background: rgba(232,195,80,0.07);
   box-shadow:
-    0 0 0 2px rgba(167,139,250,0.20),
-    0 6px 24px rgba(100,60,220,0.22),
+    0 0 0 2px rgba(232,195,80,0.22),
+    0 6px 24px rgba(180,130,20,0.20),
     0 2px 8px rgba(0,0,0,0.30);
   transform: translateY(-3px);
 }
@@ -183,12 +189,21 @@ html, body {
 .finput::placeholder { color: rgba(255,255,255,0.30); font-weight:400; }
 input[type="date"].finput,
 input[type="time"].finput {
-  color-scheme: dark;
+  /* color-scheme: light → native popup renders white on both iOS and Android */
+  color-scheme: light;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  min-height: 1.5em;
+  cursor: pointer;
 }
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(.7) opacity(.45);
+  /* brighten the icon so it's clearly visible on dark background */
+  filter: brightness(0) invert(1) opacity(0.70);
   cursor: pointer;
+  width: 18px;
+  height: 18px;
+  margin-left: 4px;
 }
 
 /* Date + Time row */
@@ -238,18 +253,18 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   font-size: 1.05rem;
   padding: 0 11px;
   line-height: 30px;
-  color: rgba(180,155,255,0.32);
+  color: rgba(160,140,220,0.18);
   user-select: none;
   display: inline-block;
-  transition: color .28s, transform .28s;
+  /* no transition — rAF drives this; transition causes all signs to blur together */
 }
 .zodiac-sign.active {
-  color: rgba(215, 198, 255, 0.85);
-  transform: scale(1.10);
+  color: rgba(220,205,255,0.82);
+  transform: scale(1.15);
 }
 .zodiac-sign.active-center {
   color: #ffffff;
-  transform: scale(1.30);
+  transform: scale(1.40);
 }
 
 /* Submit – bright light purple */
@@ -419,7 +434,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
           </div>
           <div>
             <input type="radio" id="gU" name="gender" value="U" class="g-radio">
-            <label for="gU" class="g-pill"><span class="gi">❓</span><span>不透露</span></label>
+            <label for="gU" class="g-pill"><span class="gi">？</span><span>不透露</span></label>
           </div>
         </div>
       </div>
