@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>設定星盤資料</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;500;600&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
@@ -20,7 +20,7 @@
 
 html, body {
   min-height: 100%;
-  font-family: 'Nunito', 'PingFang TC', sans-serif;
+  font-family: 'Nunito', 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', sans-serif;
   background: #020009;
   color: #fff;
   overflow-x: hidden;
@@ -132,12 +132,19 @@ html, body {
   position: relative;
 }
 .card-title {
-  font-family: 'Cinzel Decorative', cursive;
-  font-size: clamp(1.28rem, 5vw, 1.72rem);
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+  font-size: clamp(1.18rem, 4.5vw, 1.58rem);
+  font-weight: 700;
   color: var(--gold);
-  letter-spacing: .08em;
+  letter-spacing: .10em;
   text-shadow: 0 0 28px rgba(232,200,80,0.50), 0 2px 6px rgba(0,0,0,0.5);
   line-height: 1.4;
+  display: flex; align-items: center; justify-content: center; gap: .45em; flex-wrap: wrap;
+}
+.logo-svg {
+  width: 2.2em; height: 2.2em;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 10px rgba(130,100,255,0.55));
 }
 @keyframes sub-breathe {
   0%, 100% { opacity: 0.38; color: rgba(200,185,255,0.50); }
@@ -272,7 +279,8 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   color: rgba(255,255,255,0.72);
   user-select: none;
 }
-.g-pill .gi { font-size: 1.25rem; line-height:1; display:flex; align-items:center; justify-content:center; height:2rem; }
+.g-pill .gi { font-size: 1.25rem; line-height:1; display:flex; align-items:center; justify-content:center; height:1.5rem; }
+[for="gU"] .gi { font-size: 1.0rem; }
 .g-radio:checked + .g-pill {
   border-color: rgba(225,188,75,0.70);
   background: rgba(225,188,75,0.12);
@@ -433,7 +441,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
     <!-- Header -->
     <div class="card-head">
-      <h1 class="card-title">🔮 開啟您的魔法旅程</h1>
+      <h1 class="card-title"><img src="魔法LOGO-02-2.png" class="logo-svg" alt="logo"> 開啟您的魔法旅程</h1>
       <p class="card-sub">Celestial Chart · 星盤登錄</p>
       <div class="zodiac-ticker"><div class="zodiac-track" id="zodiacTrack"></div></div>
     </div>
