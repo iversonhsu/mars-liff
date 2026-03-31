@@ -181,6 +181,10 @@ html, body {
   -webkit-appearance: none; appearance: none;
 }
 .finput::placeholder { color: rgba(255,255,255,0.30); font-weight:400; }
+input[type="date"].finput,
+input[type="time"].finput {
+  color-scheme: dark;
+}
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(.7) opacity(.45);
@@ -229,11 +233,6 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   display: flex;
   align-items: center;
   width: max-content;
-  animation: zodiac-scroll 22s linear infinite;
-}
-@keyframes zodiac-scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
 }
 .zodiac-sign {
   font-size: 1.05rem;
@@ -420,7 +419,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
           </div>
           <div>
             <input type="radio" id="gU" name="gender" value="U" class="g-radio">
-            <label for="gU" class="g-pill"><span class="gi">⚧</span><span>不透露</span></label>
+            <label for="gU" class="g-pill"><span class="gi">❓</span><span>不透露</span></label>
           </div>
         </div>
       </div>
@@ -460,29 +459,42 @@ liff.init({ liffId: LIFF_ID }).catch(err => console.warn("LIFF:", err));
 (function() {
   const signs = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
   const track = document.getElementById('zodiacTrack');
-  // 4 copies so -50% translateX seamlessly loops
+  // 4 copies so translateX loops seamlessly at -50%
   const total = [...signs, ...signs, ...signs, ...signs];
   track.innerHTML = total.map(s => `<span class="zodiac-sign">${s}</span>`).join('');
 
   const ticker = document.querySelector('.zodiac-ticker');
-  const allSigns = track.querySelectorAll('.zodiac-sign');
-  function updateActive() {
-    const tcr = ticker.getBoundingClientRect();
-    const tcx = tcr.left + tcr.width / 2;
-    // Sort all signs by distance from center
-    const sorted = Array.from(allSigns).map(s => {
-      const r  = s.getBoundingClientRect();
-      return { s, d: Math.abs(r.left + r.width / 2 - tcx) };
-    }).sort((a, b) => a.d - b.d);
+  const allSigns = Array.from(track.querySelectorAll('.zodiac-sign'));
+  const DURATION = 22000; // ms
+
+  let startTime = null;
+  let halfW = 0;
+
+  function animate(ts) {
+    // Lazily measure track width after layout
+    if (!halfW) halfW = track.scrollWidth / 2;
+    if (!startTime) startTime = ts;
+
+    const offset = ((ts - startTime) % DURATION) / DURATION * halfW;
+    track.style.transform = `translateX(-${offset}px)`;
+
+    // Calculate center of ticker in its own coordinate space
+    const centerX = ticker.clientWidth / 2;
+
+    // offsetLeft is the layout position (no transform), so we subtract offset
+    const dists = allSigns.map(s => ({
+      s,
+      d: Math.abs((s.offsetLeft + s.offsetWidth * 0.5 - offset) - centerX)
+    }));
+    dists.sort((a, b) => a.d - b.d);
 
     allSigns.forEach(s => s.classList.remove('active', 'active-center'));
-    // Light up closest 3; mark the closest as active-center
-    sorted.slice(0, 3).forEach(({ s }) => s.classList.add('active'));
-    if (sorted[0]) sorted[0].s.classList.add('active-center');
+    dists.slice(0, 3).forEach(({ s }) => s.classList.add('active'));
+    if (dists[0]) dists[0].s.classList.add('active-center');
 
-    requestAnimationFrame(updateActive);
+    requestAnimationFrame(animate);
   }
-  requestAnimationFrame(updateActive);
+  requestAnimationFrame(animate);
 })();
 
 /* ══════════════════════════════════════
