@@ -78,9 +78,17 @@
 
         async function fetchQuestions() {
             try {
-                // 自動組合為 /get-questions
-                const res = await fetch(`${API_BASE}/get-questions`);
-                quizData = await res.json();
+                // ★ 改動1：加上 ?uid=${uid}，讓 n8n 能查詢該使用者的驗證狀態
+                const res = await fetch(`${API_BASE}/get-questions?uid=${uid}`);
+                const data = await res.json();
+
+                // ★ 改動2：檢查是否被 n8n 擋住（已做過或時效已過）
+                if (data.error === 'blocked') {
+                    document.getElementById('loading').innerText = "⏰ 此次測驗時效已過或已完成，無法再次開啟。";
+                    return;
+                }
+
+                quizData = data;
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
                 renderQuestion();
