@@ -84,7 +84,7 @@
 
                 // ★ 改動2：檢查是否被 n8n 擋住（已做過或時效已過）
                 if (data.error === 'blocked') {
-                    document.getElementById('loading').innerText = "⏰ 此次測驗時效已過或已完成，無法再次開啟。";
+                    document.getElementById('loading').innerText = "此次測驗已完成或過期，無法再次開啟。";
                     return;
                 }
 
