@@ -269,6 +269,45 @@
     .ov-loader.hide { display: none; }
     .ov-spinner { width: 20px; height: 20px; border: 2px solid rgba(180,140,255,.18); border-top-color: var(--accent); border-radius: 50%; animation: spin .85s linear infinite; }
 
+    /* ── Stage label ── */
+    #carousel-wrap { justify-content: flex-start; }
+    #stage-area { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0 16px; }
+    .stage-spacer { flex: 1; min-height: 0; }
+    #stage-label {
+      font-family: 'Cinzel', 'Noto Serif TC', serif; font-size: 18px; font-weight: 700;
+      letter-spacing: 1px; font-size: 27px; display: flex; align-items: center; gap: 14px;
+      width: 100%; max-width: 480px; transition: color .35s;
+    }
+    #stage-label::before, #stage-label::after {
+      content: ''; flex: 1; height: 1px;
+    }
+    #stage-label::before { background: linear-gradient(to right, transparent, currentColor); opacity: .92; }
+    #stage-label::after  { background: linear-gradient(to left,  transparent, currentColor); opacity: .92; }
+    #stage-label.stage-0 {
+      color: rgba(210,212,230,0.9);
+      background: linear-gradient(to bottom, #ffffff, rgba(110,115,155,0.95));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #stage-label.stage-1 {
+      color: rgba(74,222,128,0.92);
+      background: linear-gradient(to bottom, #ccffdd, rgba(20,130,65,0.95));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #stage-label.stage-2 {
+      color: rgba(80,180,255,0.92);
+      background: linear-gradient(to bottom, #d0f0ff, rgba(20,80,220,0.95));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #stage-label.stage-3 {
+      color: rgba(190,100,255,0.92);
+      background: linear-gradient(to bottom, rgba(190,100,255,0.95), rgba(255,90,130,0.95));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
     /* ── Loading screen ── */
     #loading-screen {
       position: fixed; inset: 0; z-index: 999;
@@ -325,6 +364,7 @@
 
       <!-- Species carousel -->
       <div class="carousel-wrap" id="carousel-wrap">
+        <div id="stage-area"><div id="stage-label">誕生</div></div>
         <div class="carousel" id="carousel">
           <div class="c-track" id="c-track"></div>
         </div>
@@ -333,6 +373,7 @@
           <div class="dots-row" id="dots-row"></div>
           <div class="c-arrow" id="arrow-r" onclick="go(cur+1)">›</div>
         </div>
+        <div class="stage-spacer"></div>
       </div>
 
       <!-- Overview grid -->
@@ -357,6 +398,7 @@
 </div>
 
 <script>
+const STAGES = ['誕生', '幼年', '覺醒', '星神'];
 const WEBHOOK       = 'https://webbermars.app.n8n.cloud/webhook/get-signed-url';
 const BATCH_WEBHOOK = 'https://webbermars.app.n8n.cloud/webhook/get-signed-urls-batch';
 let urlCache = {};
@@ -435,6 +477,9 @@ function go(index, animate = true) {
   document.querySelectorAll('#dots-row .dot-item').forEach((d, i) => d.classList.toggle('active', i === cur));
   document.getElementById('arrow-l').classList.toggle('hidden', cur === 0);
   document.getElementById('arrow-r').classList.toggle('hidden', cur === 3);
+  const sl = document.getElementById('stage-label');
+  sl.textContent = STAGES[cur];
+  sl.className   = `stage-${cur}`;
 }
 
 /* touch swipe — species carousel */
