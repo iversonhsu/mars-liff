@@ -268,11 +268,28 @@
     .ov-loader { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2; }
     .ov-loader.hide { display: none; }
     .ov-spinner { width: 20px; height: 20px; border: 2px solid rgba(180,140,255,.18); border-top-color: var(--accent); border-radius: 50%; animation: spin .85s linear infinite; }
+
+    /* ── Loading screen ── */
+    #loading-screen {
+      position: fixed; inset: 0; z-index: 999;
+      background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+      transition: opacity .4s;
+    }
+    #loading-screen.hide { opacity: 0; pointer-events: none; }
+    #loading-screen .load-text {
+      font-family: 'Noto Serif TC', serif; font-size: 14px; letter-spacing: 1px;
+      color: rgba(180,140,255,0.65);
+    }
   </style>
 </head>
 <body>
 
 <canvas id="starfield"></canvas>
+<div id="loading-screen">
+  <div class="spinner" style="width:44px;height:44px;border-width:3px"></div>
+  <div class="load-text">載入圖鑑中…</div>
+</div>
 <div id="overlay" onclick="closeSidebar()"></div>
 
 <div id="app">
@@ -340,7 +357,9 @@
 </div>
 
 <script>
-const WEBHOOK = 'https://webbermars.app.n8n.cloud/webhook/get-signed-url';
+const WEBHOOK       = 'https://webbermars.app.n8n.cloud/webhook/get-signed-url';
+const BATCH_WEBHOOK = 'https://webbermars.app.n8n.cloud/webhook/get-signed-urls-batch';
+let urlCache = {};
 
 const SPECIES = [
   { key:'Dragon',  zh:'龍',     en:'Dragon'  },
@@ -360,7 +379,25 @@ let isSelecting = false, selectedImages = [], confirmedImages = [];
 let cmpCur = 0, cmpTotal = 0;
 
 function imgUrl(key, n) {
-  return `${WEBHOOK}?path=${encodeURIComponent(`encyclopedia/${key}/stage_${n}.png`)}`;
+  const path = `encyclopedia/${key}/stage_${n}.png`;
+  return urlCache[path] || `${WEBHOOK}?path=${encodeURIComponent(path)}`;
+}
+
+async function preloadAllUrls() {
+  const paths = [];
+  SPECIES.forEach(sp => {
+    for (let i = 1; i <= 4; i++) paths.push(`encyclopedia/${sp.key}/stage_${i}.png`);
+  });
+  try {
+    const res = await fetch(BATCH_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paths })
+    });
+    urlCache = await res.json();
+  } catch (e) {
+    console.warn('Batch preload failed, falling back to single requests');
+  }
 }
 
 /* ══ SPECIES CAROUSEL ══ */
@@ -738,8 +775,13 @@ function closeSidebar() {
 
 /* ══ INIT ══ */
 buildSpeciesList();
-showCarousel();
-buildCarousel(activeSp);
+preloadAllUrls().then(() => {
+  const ls = document.getElementById('loading-screen');
+  ls.classList.add('hide');
+  setTimeout(() => { ls.style.display = 'none'; }, 400);
+  showCarousel();
+  buildCarousel(activeSp);
+});
 </script>
 </body>
 </html>
