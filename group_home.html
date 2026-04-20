@@ -126,11 +126,10 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 40px 20px;
+      padding: 28px 20px;
       text-align: center;
       box-shadow: var(--shadow-sm);
     }
-    .empty-icon { font-size: 44px; margin-bottom: 12px; }
     .empty-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
     .empty-desc { font-size: 13px; color: var(--subtext); line-height: 1.6; }
 
@@ -248,7 +247,7 @@
 <body>
 
 <header class="header">
-  <div class="header-title">✦ 星際群組</div>
+  <div class="header-title">星際群組</div>
   <div class="header-sub">與好友一起探索星座能量</div>
 </header>
 
@@ -351,8 +350,8 @@
       const d = await r.json();
       renderGroups(d.groups || []);
     } catch {
-      if (retry < 1) { setTimeout(() => loadGroups(1), 2500); }
-      else { showToast('載入失敗', 'err'); renderGroups([]); }
+      if (retry < 2) { setTimeout(() => loadGroups(retry + 1), 4000); }
+      else { showToast('載入失敗，請關閉後重試', 'err'); renderGroups([]); }
     }
   }
 
@@ -361,7 +360,6 @@
     if (!list.length) {
       el.innerHTML = `
         <div class="empty">
-          <div class="empty-icon"><svg width="44" height="44" viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="21" fill="#ede9fe"/><path d="M22 9l2.5 7.5H33l-6.5 4.7 2.5 7.5L22 24l-7 4.7 2.5-7.5L11 16.5h8.5L22 9z" fill="#7c3aed"/></svg></div>
           <div class="empty-title">尚未加入任何群組</div>
           <div class="empty-desc">建立群組邀請朋友，或輸入驗證碼加入朋友的群組</div>
         </div>`;
