@@ -342,7 +342,7 @@
     }
   }
 
-  async function loadGroups() {
+  async function loadGroups(retry = 0) {
     try {
       const r = await fetch(`${API}/group-list`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -350,7 +350,10 @@
       });
       const d = await r.json();
       renderGroups(d.groups || []);
-    } catch { showToast('載入失敗', 'err'); renderGroups([]); }
+    } catch {
+      if (retry < 1) { setTimeout(() => loadGroups(1), 2500); }
+      else { showToast('載入失敗', 'err'); renderGroups([]); }
+    }
   }
 
   function renderGroups(list) {
@@ -358,7 +361,7 @@
     if (!list.length) {
       el.innerHTML = `
         <div class="empty">
-          <div class="empty-icon">🌌</div>
+          <div class="empty-icon"><svg width="44" height="44" viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="21" fill="#ede9fe"/><path d="M22 9l2.5 7.5H33l-6.5 4.7 2.5 7.5L22 24l-7 4.7 2.5-7.5L11 16.5h8.5L22 9z" fill="#7c3aed"/></svg></div>
           <div class="empty-title">尚未加入任何群組</div>
           <div class="empty-desc">建立群組邀請朋友，或輸入驗證碼加入朋友的群組</div>
         </div>`;
@@ -366,7 +369,7 @@
     }
     el.innerHTML = list.map(g => `
       <div class="group-card" onclick="goRoom('${x(g.group_id)}','${x(g.group_name)}','${x(g.invite_code)}')">
-        <div class="group-icon">✦</div>
+        <div class="group-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="#7c3aed"><path d="M9 1.5l1.8 5.4H17l-4.6 3.3 1.8 5.4L9 12.4l-5.2 3.2 1.8-5.4L1 6.9h6.2L9 1.5z"/></svg></div>
         <div class="group-info">
           <div class="group-name">${x(g.group_name)}</div>
           <span class="invite-chip">${x(g.invite_code)}</span>
