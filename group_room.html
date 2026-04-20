@@ -155,15 +155,15 @@
     .aura-inline::before { content: ''; }
 
     /* Element chips */
-    .elements { display: flex; gap: 6px; flex-wrap: wrap; }
+    .elements { display: flex; gap: 4px; flex-wrap: nowrap; }
     .el-chip {
-      display: flex; align-items: center; gap: 3px;
-      padding: 4px 9px; border-radius: 7px;
-      font-size: 12px;
+      display: flex; align-items: center; gap: 2px;
+      padding: 3px 7px; border-radius: 7px;
+      font-size: 11px;
     }
-    .el-icon  { font-size: 12px; line-height: 1; }
-    .el-label { font-size: 12px; font-weight: 500; }
-    .el-val   { font-size: 13px; font-weight: 700; margin-left: 3px; }
+    .el-icon  { font-size: 11px; line-height: 1; display: inline-flex; align-items: center; height: 14px; overflow: hidden; }
+    .el-label { font-size: 11px; font-weight: 500; }
+    .el-val   { font-size: 12px; font-weight: 700; margin-left: 1px; }
     .el-fire  { background: var(--fire-bg);  color: var(--fire-c);  }
     .el-earth { background: var(--earth-bg); color: var(--earth-c); }
     .el-wind  { background: var(--wind-bg);  color: var(--wind-c);  }
