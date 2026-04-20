@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>星際群組</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #f3f2f7;
+      --card:     #ffffff;
+      --border:   #e5e3ec;
+      --text:     #1c1a2e;
+      --subtext:  #6b7280;
+      --muted:    #9ca3af;
+      --primary:  #7c3aed;
+      --pri-bg:   #ede9fe;
+      --pri-text: #5b21b6;
+      --gold:     #d97706;
+      --gold-bg:  #fef3c7;
+      --success:  #059669;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow:    0 3px 10px rgba(0,0,0,0.09);
+      --fire-c:  #dc2626; --fire-bg:  #fee2e2;
+      --earth-c: #92400e; --earth-bg: #fef3c7;
+      --wind-c:  #166534; --wind-bg:  #dcfce7;
+      --water-c: #0369a1; --water-bg: #dbeafe;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 36px;
+      font-size: 15px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .back-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 18px; flex-shrink: 0;
+      padding-right: 2px;
+      transition: background 0.12s;
+    }
+    .back-btn:active { background: var(--border); }
+    .header-mid { flex: 1; min-width: 0; }
+    .header-gname {
+      font-size: 18px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* 右側代碼區塊 */
+    .header-code-btn {
+      flex-shrink: 0; text-align: center;
+      cursor: pointer; padding: 5px 10px; border-radius: 9px;
+      transition: background 0.12s;
+    }
+    .header-code-btn:active { background: rgba(0,0,0,0.04); }
+    .header-code-hint {
+      font-size: 10px; color: var(--subtext); margin-bottom: 5px;
+    }
+    .header-code-val {
+      display: inline-block;
+      font-size: 12px; font-weight: 700;
+      color: var(--pri-text); letter-spacing: 0.12em;
+      background: var(--pri-bg);
+      border: 1px solid var(--border);
+      padding: 3px 10px; border-radius: 20px;
+    }
+
+    /* ── Container ── */
+    .container { padding: 16px; }
+
+    /* ── Section Header ── */
+    .sec-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .sec-title {
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sec-title::before {
+      content: '';
+      display: block; width: 4px; height: 16px; border-radius: 2px;
+    }
+    .sec-members .sec-title::before { background: var(--primary); }
+    .sec-rank    .sec-title::before { background: #f59e0b; }
+    .count-badge {
+      font-size: 12px; color: var(--text); font-weight: 600;
+      background: var(--bg); border: 1px solid var(--subtext);
+      padding: 2px 10px; border-radius: 20px;
+    }
+
+    /* ── Member Card ── */
+    .member-card {
+      background: var(--card);
+      border: 1px solid #b0adc0;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex; gap: 12px; align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .member-card.is-self {
+      background: #f5f3ff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 12px rgba(124,58,237,0.13);
+    }
+    .member-card.is-self .member-name { color: var(--primary); }
+    .member-avatar {
+      width: 52px; height: 52px; border-radius: 12px;
+      background: var(--pri-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; overflow: hidden; flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .member-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .member-info { flex: 1; min-width: 0; }
+
+    /* Name row: name + self-tag 左側，靈氣點數推到右側 */
+    .member-top {
+      display: flex; align-items: center;
+      gap: 6px; margin-bottom: 8px;
+    }
+    .member-name {
+      font-size: 16px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      flex: 1; min-width: 0;
+    }
+    .self-tag {
+      font-size: 10px; font-weight: 700;
+      color: var(--pri-text); background: var(--pri-bg);
+      padding: 1px 6px; border-radius: 5px;
+      flex-shrink: 0;
+    }
+    .aura-inline {
+      font-size: 12px; font-weight: 600;
+      color: var(--gold); white-space: nowrap;
+      flex-shrink: 0; margin-left: 4px;
+    }
+    .aura-inline::before { content: ''; }
+
+    /* Element chips */
+    .elements { display: flex; gap: 6px; flex-wrap: wrap; }
+    .el-chip {
+      display: flex; align-items: center; gap: 3px;
+      padding: 4px 9px; border-radius: 7px;
+      font-size: 12px;
+    }
+    .el-icon  { font-size: 12px; line-height: 1; }
+    .el-label { font-size: 12px; font-weight: 500; }
+    .el-val   { font-size: 13px; font-weight: 700; margin-left: 3px; }
+    .el-fire  { background: var(--fire-bg);  color: var(--fire-c);  }
+    .el-earth { background: var(--earth-bg); color: var(--earth-c); }
+    .el-wind  { background: var(--wind-bg);  color: var(--wind-c);  }
+    .el-water { background: var(--water-bg); color: var(--water-c); }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 22px 0 20px; }
+
+    /* ── Ranking Toggle (segmented control) ── */
+    .rank-toggle {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 3px;
+      gap: 3px;
+      margin-bottom: 14px;
+    }
+    .rank-tab {
+      flex: 1; padding: 9px 0;
+      border-radius: 8px; border: none;
+      background: transparent; color: var(--subtext);
+      font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.18s;
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif; display: flex;
+      align-items: center; justify-content: center; gap: 5px;
+    }
+    .rank-tab.active {
+      background: var(--card);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Ranking Panel ── */
+    .rank-panel { display: none; }
+    .rank-panel.active { display: block; }
+
+    .rank-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Top-3 podium strip */
+    .rank-item {
+      display: flex; align-items: center;
+      padding: 13px 16px; gap: 12px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    .rank-item:last-child { border-bottom: none; }
+    .rank-item.gold-row   { background: #fffbeb; }
+    .rank-item.silver-row { background: #f5f3ff; }
+    .rank-item.bronze-row { background: #fdf2f8; }
+
+    .medal { font-size: 22px; flex-shrink: 0; width: 28px; text-align: center; }
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-name {
+      font-size: 14px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .rank-name.is-self-rank { color: var(--primary); }
+    .rank-sub { font-size: 12px; color: var(--subtext); }
+
+    .rank-score-col { flex-shrink: 0; display: flex; align-items: center; }
+
+    /* 得分王：+48 [90%] 同行 */
+    .score-line {
+      display: flex; align-items: center;
+      gap: 10px; white-space: nowrap;
+    }
+    .score-main {
+      font-size: 18px; font-weight: 700; color: var(--gold);
+    }
+    .acc-pill {
+      font-size: 11px; font-weight: 700;
+      color: #065f46; background: #d1fae5;
+      border: 1px solid #6ee7b7;
+      padding: 2px 8px; border-radius: 20px;
+      pointer-events: none; white-space: nowrap;
+    }
+
+    /* 互動王：數字 + 單位 同行 */
+    .rank-count {
+      font-size: 20px; font-weight: 700; color: var(--gold);
+      display: flex; align-items: baseline; gap: 8px;
+    }
+    .rank-count-unit { font-size: 13px; font-weight: 600; color: var(--subtext); }
+
+    .rank-empty {
+      padding: 28px; text-align: center;
+      font-size: 13px; color: var(--muted);
+    }
+    .rank-pos-num {
+      font-size: 13px; font-weight: 700; color: var(--muted);
+      width: 28px; text-align: center; flex-shrink: 0;
+    }
+    .rank-expand-btn {
+      padding: 11px 16px; text-align: center;
+      font-size: 13px; font-weight: 600; color: var(--primary);
+      cursor: pointer; border-top: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    .rank-expand-btn:active { background: var(--bg); }
+
+    /* ── Help button ── */
+    .help-btn {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--bg); border: 1.5px solid var(--subtext);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: var(--subtext);
+      cursor: pointer; transition: all 0.15s;
+      font-family: 'Noto Sans TC', sans-serif; flex-shrink: 0;
+    }
+    .help-btn:active { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Help overlay ── */
+    .help-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200; display: flex; align-items: flex-end;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.22s, visibility 0.22s;
+    }
+    .help-overlay.open { opacity: 1; visibility: visible; }
+    .help-sheet {
+      background: var(--card);
+      border-radius: 20px 20px 0 0;
+      padding: 0 20px 44px;
+      width: 100%;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+    }
+    .help-overlay.open .help-sheet { transform: translateY(0); }
+    .help-handle {
+      width: 36px; height: 4px; background: var(--border);
+      border-radius: 2px; margin: 14px auto 20px;
+    }
+    .help-title { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+    .help-item { margin-bottom: 16px; }
+    .help-item-title {
+      font-size: 14px; font-weight: 700;
+      color: var(--primary); margin-bottom: 5px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .help-item-desc {
+      font-size: 13px; color: var(--subtext); line-height: 1.7;
+    }
+
+    /* ── Loading ── */
+    .loading { display: flex; justify-content: center; padding: 52px; }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: #1c1a2e; color: #fff;
+      border-radius: 10px; padding: 10px 18px;
+      font-size: 13px; white-space: nowrap;
+      opacity: 0; transition: all 0.22s;
+      z-index: 1000; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.ok   { background: var(--success); }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="back-btn" onclick="goBack()">←</div>
+  <div class="header-mid">
+    <div class="header-gname" id="groupName">載入中...</div>
+  </div>
+  <div class="header-code-btn" onclick="copyCode()">
+    <div class="header-code-hint" id="copyHint">點擊複製代碼</div>
+    <div class="header-code-val" id="codeChip">------</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Members -->
+  <div class="sec-head sec-members">
+    <div class="sec-title">成員</div>
+    <div class="count-badge" id="memberCount">-</div>
+  </div>
+  <div id="memberList"><div class="loading"><div class="spinner"></div></div></div>
+
+  <div class="divider"></div>
+
+  <!-- Rankings -->
+  <div class="sec-head sec-rank">
+    <div class="sec-title">本週排名</div>
+    <button class="help-btn" onclick="openHelp()">?</button>
+  </div>
+
+  <!-- Segmented Toggle -->
+  <div class="rank-toggle">
+    <button class="rank-tab active" id="tab-score"    onclick="switchTab('score')">🏆 得分王</button>
+    <button class="rank-tab"        id="tab-interact" onclick="switchTab('interact')">📸 互動王</button>
+  </div>
+
+  <!-- Score Panel (得分王) -->
+  <div class="rank-panel active" id="panel-score">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+
+  <!-- Interact Panel (互動王) -->
+  <div class="rank-panel" id="panel-interact">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Help Modal -->
+<div class="help-overlay" id="helpOverlay" onclick="closeHelp()">
+  <div class="help-sheet" onclick="event.stopPropagation()">
+    <div class="help-handle"></div>
+    <div class="help-title">本週排名說明</div>
+    <div class="help-item">
+      <div class="help-item-title">🏆 得分王</div>
+      <div class="help-item-desc">獲得最多靈氣點數的人。點數可透過每日答題獲得，後方顯示的是答題的正確率。此排名每週重新計算。</div>
+    </div>
+    <div class="help-item">
+      <div class="help-item-title">📸 互動王</div>
+      <div class="help-item-desc">傳最多圖片的人。讓馬爾斯分析圖片可提升元素分數，也能獲得靈氣點數。此排名每週重新計算。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://webbermars.app.n8n.cloud/webhook';
+  let myNickname = '';
+
+  const p          = new URLSearchParams(location.search);
+  const group_id   = p.get('group_id')    || '';
+  const group_name = p.get('group_name')  || '星際群組';
+  const uid        = p.get('uid')         || '';
+  const inv_code   = p.get('invite_code') || '';
+
+  document.getElementById('groupName').textContent = group_name;
+  document.getElementById('codeChip').textContent  = inv_code || '------';
+  document.title = group_name;
+
+  /* ── Tab toggle ─────────────────────────────────────────────── */
+  function switchTab(tab) {
+    ['score','interact'].forEach(t => {
+      document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+      document.getElementById(`panel-${t}`).classList.toggle('active', t === tab);
+    });
+  }
+
+  /* ── Init ─────────────────────────────────────────────────────  */
+  async function init() {
+    if (!group_id || !uid || uid === 'demo_user') { renderDemo(); return; }
+    await Promise.all([loadMembers(), loadRankings()]);
+  }
+
+  /* ── Members ─────────────────────────────────────────────────── */
+  async function loadMembers() {
+    try {
+      const r = await fetch(`${API}/group-members`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ group_id })
+      });
+      renderMembers((await r.json()).members || []);
+    } catch {
+      document.getElementById('memberList').innerHTML =
+        '<div style="padding:20px;color:var(--muted);text-align:center">無法載入成員資料</div>';
+    }
+  }
+
+  function renderMembers(members) {
+    members.sort((a, b) => (a.uid === uid ? -1 : b.uid === uid ? 1 : 0));
+    document.getElementById('memberCount').textContent = `共 ${members.length} 人`;
+
+    if (!members.length) {
+      document.getElementById('memberList').innerHTML =
+        '<div style="padding:16px;color:var(--muted);text-align:center">目前沒有成員</div>';
+      return;
+    }
+
+    const els = [
+      { key:'fire',  icon:'🔥', label:'火', cls:'fire'  },
+      { key:'earth', icon:'⛰️', label:'土', cls:'earth' },
+      { key:'air',   icon:'💨', label:'風', cls:'wind'  },
+      { key:'water', icon:'💧', label:'水', cls:'water' }
+    ];
+
+    document.getElementById('memberList').innerHTML = members.map(m => {
+      const isSelf  = m.uid === uid;
+      if (isSelf) myNickname = m.nickname || '';
+      const avatar  = m.line_avatar
+        ? `<img src="${x(m.line_avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
+        : '🌟';
+
+      const aura    = Number(m.aura_points) || 0;
+
+      const chips = els.map(e => {
+        const val = Number(m[`current10_${e.key}`]) || 0;
+        return `<span class="el-chip el-${e.cls}">
+          <span class="el-icon">${e.icon}</span><span class="el-label">${e.label}</span><span class="el-val">${val}</span>
+        </span>`;
+      }).join('');
+
+      return `
+        <div class="member-card${isSelf ? ' is-self' : ''}">
+          <div class="member-avatar">${avatar}</div>
+          <div class="member-info">
+            <div class="member-top">
+              <span class="member-name">${x(m.nickname || '未知成員')}</span>
+              <span class="aura-inline">${aura} 靈氣</span>
+            </div>
+            <div class="elements">${chips}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Rankings ────────────────────────────────────────────────── */
+  async function loadRankings() {
+    try {
+      const r = await fetch(`${API}/group-rankings`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ group_id })
+      });
+      renderRankings((await r.json()).rankings || { image: [], qa: [] });
+    } catch {
+      ['score','interact'].forEach(id => {
+        document.getElementById(`panel-${id}`).innerHTML =
+          '<div style="padding:20px;color:var(--muted);text-align:center">無法載入排名</div>';
+      });
+    }
+  }
+
+  function renderRankings({ image = [], qa = [] }) {
+    const medals     = ['🥇','🥈','🥉'];
+    const rowClasses = ['gold-row','silver-row','bronze-row'];
+
+    function posEl(i) {
+      return i < 3
+        ? `<span class="medal">${medals[i]}</span>`
+        : `<span class="rank-pos-num">${i + 1}</span>`;
+    }
+
+    function rowAttr(i) {
+      if (i < 3) return `class="rank-item ${rowClasses[i]}"`;
+      return `class="rank-item rank-hidden" style="display:none;background:#fff"`;
+    }
+
+    function expandBtn(list) {
+      if (list.length <= 3) return '';
+      return `<div class="rank-expand-btn" onclick="toggleRankFull(this)">查看完整排名 ↓</div>`;
+    }
+
+    function scoreRows(list) {
+      if (!list.length) return `<div class="rank-empty">本週尚無紀錄</div>`;
+      return list.map((r, i) => {
+        const selfCls = (myNickname && r.nickname === myNickname) ? ' is-self-rank' : '';
+        return `
+        <div ${rowAttr(i)}>
+          ${posEl(i)}
+          <div class="rank-info">
+            <div class="rank-name${selfCls}">${x(r.nickname || '---')}</div>
+          </div>
+          <div class="rank-score-col">
+            <div class="score-line">
+              <span class="score-main">+${r.weekly_points_gained ?? 0}</span>
+              <span class="acc-pill">${r.accuracy ?? 0}%</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('') + expandBtn(list);
+    }
+
+    function interactRows(list) {
+      if (!list.length) return `<div class="rank-empty">本週尚無紀錄</div>`;
+      return list.map((r, i) => {
+        const selfCls = (myNickname && r.nickname === myNickname) ? ' is-self-rank' : '';
+        return `
+        <div ${rowAttr(i)}>
+          ${posEl(i)}
+          <div class="rank-info">
+            <div class="rank-name${selfCls}">${x(r.nickname || '---')}</div>
+          </div>
+          <div class="rank-score-col">
+            <div class="rank-count">
+              ${r.weekly_image_count ?? 0}<span class="rank-count-unit">張</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('') + expandBtn(list);
+    }
+
+    document.getElementById('panel-score').innerHTML =
+      `<div class="rank-card">${scoreRows(qa)}</div>`;
+    document.getElementById('panel-interact').innerHTML =
+      `<div class="rank-card">${interactRows(image)}</div>`;
+  }
+
+  function toggleRankFull(btn) {
+    const hidden   = btn.closest('.rank-card').querySelectorAll('.rank-hidden');
+    const expanding = hidden[0]?.style.display === 'none';
+    hidden.forEach(r => r.style.display = expanding ? 'flex' : 'none');
+    btn.textContent = expanding ? '收起 ↑' : '查看完整排名 ↓';
+  }
+
+  /* ── Demo ────────────────────────────────────────────────────── */
+  function renderDemo() {
+    document.getElementById('groupName').textContent = '天秤座好友團（預覽）';
+    document.getElementById('codeChip').textContent  = 'AB1234';
+
+    renderMembers([
+      { uid:'demo_user', nickname:'你（示範）', aura_points:320, line_avatar:'',
+        current10_fire:7, current10_earth:4, current10_air:9, current10_water:5 },
+      { uid:'u2', nickname:'宇宙探索家', aura_points:210, line_avatar:'',
+        current10_fire:3, current10_earth:8, current10_air:5, current10_water:9 },
+      { uid:'u3', nickname:'銀河守衛',   aura_points:155, line_avatar:'',
+        current10_fire:10, current10_earth:2, current10_air:6, current10_water:3 }
+    ]);
+
+    renderRankings({
+      image: [
+        { nickname:'你（示範）', weekly_image_count:12 },
+        { nickname:'銀河守衛',   weekly_image_count:8  },
+        { nickname:'宇宙探索家', weekly_image_count:5  },
+        { nickname:'星塵旅人',   weekly_image_count:3  },
+        { nickname:'月光騎士',   weekly_image_count:1  }
+      ],
+      qa: [
+        { nickname:'宇宙探索家', weekly_qa_correct:9, accuracy:90, weekly_points_gained:48 },
+        { nickname:'你（示範）', weekly_qa_correct:7, accuracy:87, weekly_points_gained:35 },
+        { nickname:'銀河守衛',   weekly_qa_correct:3, accuracy:60, weekly_points_gained:15 },
+        { nickname:'星塵旅人',   weekly_qa_correct:2, accuracy:50, weekly_points_gained:8  },
+        { nickname:'月光騎士',   weekly_qa_correct:1, accuracy:33, weekly_points_gained:3  }
+      ]
+    });
+  }
+
+  /* ── Helpers ─────────────────────────────────────────────────── */
+  function openHelp()  { document.getElementById('helpOverlay').classList.add('open'); }
+  function closeHelp() { document.getElementById('helpOverlay').classList.remove('open'); }
+
+  function goBack() {
+    if (document.referrer) history.back();
+    else location.href = 'group_home.html';
+  }
+
+  function copyCode() {
+    const code = inv_code || document.getElementById('codeChip').textContent;
+    if (!code || code === '------') return;
+    navigator.clipboard?.writeText(code).then(() => {
+      document.getElementById('copyHint').textContent = '✓ 已複製！';
+      showToast('代碼已複製', 'ok');
+      setTimeout(() => { document.getElementById('copyHint').textContent = '點擊複製代碼'; }, 2000);
+    });
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast ${type} show`;
+    setTimeout(() => { t.className = 'toast'; }, 2200);
+  }
+
+  function x(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>

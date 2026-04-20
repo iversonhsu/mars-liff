@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>星際群組</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root {
+      --bg:       #f3f2f7;
+      --card:     #ffffff;
+      --border:   #e5e3ec;
+      --text:     #1c1a2e;
+      --subtext:  #6b7280;
+      --muted:    #9ca3af;
+      --primary:  #7c3aed;
+      --pri-bg:   #ede9fe;
+      --pri-text: #5b21b6;
+      --gold:     #d97706;
+      --gold-bg:  #fef3c7;
+      --danger:   #dc2626;
+      --danger-bg:#fee2e2;
+      --success:  #059669;
+      --success-bg:#d1fae5;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow:    0 2px 8px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 96px;
+      font-size: 15px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 14px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-title {
+      font-size: 20px; font-weight: 700;
+      color: var(--primary);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .header-sub { font-size: 12px; color: var(--subtext); margin-top: 2px; }
+
+    /* ── Container ── */
+    .container { padding: 16px; }
+
+    /* ── User Card ── */
+    .user-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+    .user-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--pri-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; overflow: hidden; flex-shrink: 0;
+      border: 2px solid var(--border);
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-name { font-size: 15px; font-weight: 700; color: var(--text); }
+    .user-sub  { font-size: 12px; color: var(--subtext); margin-top: 1px; }
+
+    /* ── Section ── */
+    .section-label {
+      font-size: 12px; font-weight: 700;
+      color: var(--subtext);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    /* ── Group Card ── */
+    .group-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex; align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .group-card:active { transform: scale(0.99); }
+    @media (hover: hover) {
+      .group-card:hover {
+        box-shadow: var(--shadow);
+        transform: translateY(-1px);
+      }
+    }
+    .group-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: var(--pri-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .group-info { flex: 1; min-width: 0; }
+    .group-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .invite-chip {
+      display: inline-block;
+      background: var(--pri-bg);
+      color: var(--pri-text);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 2px 8px; border-radius: 6px;
+    }
+    .group-arrow { color: var(--muted); font-size: 20px; flex-shrink: 0; }
+
+    /* ── Empty ── */
+    .empty {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 40px 20px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .empty-icon { font-size: 44px; margin-bottom: 12px; }
+    .empty-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .empty-desc { font-size: 13px; color: var(--subtext); line-height: 1.6; }
+
+    /* ── Bottom Bar ── */
+    .bottom-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px 24px;
+      display: flex; gap: 10px;
+      z-index: 50;
+    }
+    .btn {
+      flex: 1; padding: 13px 0;
+      border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer;
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.45; pointer-events: none; }
+    .btn-primary  { background: var(--primary); color: #fff; }
+    .btn-outline  {
+      background: var(--card); color: var(--primary);
+      border: 1.5px solid var(--primary);
+    }
+    @media (hover: hover) {
+      .btn-primary:hover  { opacity: 0.88; }
+      .btn-outline:hover  { background: var(--pri-bg); }
+    }
+
+    /* ── Modal ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.22s, visibility 0.22s;
+      display: flex; align-items: flex-end;
+    }
+    .overlay.open { opacity: 1; visibility: visible; }
+    .sheet {
+      background: var(--card);
+      border-radius: 20px 20px 0 0;
+      padding: 0 20px 40px;
+      width: 100%;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+    }
+    .overlay.open .sheet { transform: translateY(0); }
+    .sheet-handle {
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 14px auto 20px;
+    }
+    .sheet-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 16px; }
+    label { font-size: 13px; font-weight: 600; color: var(--subtext); display: block; margin-bottom: 7px; }
+    .input {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 11px;
+      padding: 13px 14px;
+      font-size: 16px; color: var(--text);
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif; outline: none;
+      transition: border-color 0.18s;
+    }
+    .input:focus { border-color: var(--primary); background: #fff; }
+    .input::placeholder { color: var(--muted); }
+
+    /* ── Success Card ── */
+    .success-card {
+      background: var(--pri-bg);
+      border: 1.5px solid #c4b5fd;
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .success-label { font-size: 12px; font-weight: 700; color: var(--pri-text); margin-bottom: 8px; }
+    .success-code  { font-size: 32px; font-weight: 700; letter-spacing: 0.24em; color: var(--primary); }
+    .success-hint  { font-size: 12px; color: var(--subtext); margin-top: 8px; line-height: 1.6; }
+
+    /* ── Loading ── */
+    .loading { display: flex; justify-content: center; padding: 48px; }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: #1c1a2e; color: #fff;
+      border-radius: 10px; padding: 10px 18px;
+      font-size: 13px; white-space: nowrap;
+      opacity: 0; transition: all 0.22s;
+      z-index: 1000; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.err  { background: var(--danger); }
+    .toast.ok   { background: var(--success); }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-title">✦ 星際群組</div>
+  <div class="header-sub">與好友一起探索星座能量</div>
+</header>
+
+<div class="container">
+
+  <div class="user-card">
+    <div class="user-avatar" id="userAvatar">🌟</div>
+    <div>
+      <div class="user-name" id="userName">載入中...</div>
+      <div class="user-sub"  id="userSub">連接中...</div>
+    </div>
+  </div>
+
+  <div class="section-label">我的群組</div>
+  <div id="groupList"><div class="loading"><div class="spinner"></div></div></div>
+
+</div>
+
+<div class="bottom-bar">
+  <button class="btn btn-outline"  onclick="openSheet('joinSheet')">輸入群組代碼</button>
+  <button class="btn btn-primary"  onclick="openSheet('createSheet')">建立群組</button>
+</div>
+
+<!-- Create Sheet -->
+<div class="overlay" id="createSheet" onclick="closeOnBg(event,'createSheet')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="createTitle">建立新群組</div>
+    <div id="createForm">
+      <div class="form-group">
+        <label>群組名稱</label>
+        <input type="text" class="input" id="groupNameInput" placeholder="為群組取個名字" maxlength="30">
+      </div>
+      <button class="btn btn-primary" style="width:100%" id="createBtn" onclick="createGroup()">建立</button>
+    </div>
+    <div id="createDone" style="display:none">
+      <div class="success-card">
+        <div class="success-label">群組驗證碼（分享給朋友）</div>
+        <div class="success-code" id="createdCode">------</div>
+        <div class="success-hint">朋友輸入這組驗證碼即可加入</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="enterCreated()">進入群組 ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- Join Sheet -->
+<div class="overlay" id="joinSheet" onclick="closeOnBg(event,'joinSheet')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">加入群組</div>
+    <div class="form-group">
+      <label>輸入 6 位數代碼</label>
+      <input type="text" class="input" id="codeInput"
+        placeholder="ABC123" maxlength="6"
+        style="text-transform:uppercase;letter-spacing:0.25em;text-align:center;font-size:22px;font-weight:700">
+    </div>
+    <button class="btn btn-primary" style="width:100%" id="joinBtn" onclick="joinGroup()">加入</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API     = 'https://webbermars.app.n8n.cloud/webhook';
+  const LIFF_ID = 'YOUR_LIFF_ID';
+
+  let uid = '';
+  let createdGid = '', createdGname = '', createdCode = '';
+
+  async function init() {
+    try {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) { liff.login(); return; }
+      const p = await liff.getProfile();
+      uid = p.userId;
+      document.getElementById('userName').textContent = p.displayName;
+      document.getElementById('userSub').textContent  = '已連線';
+      if (p.pictureUrl)
+        document.getElementById('userAvatar').innerHTML = `<img src="${p.pictureUrl}" alt="">`;
+      loadGroups();
+    } catch {
+      uid = 'demo_user';
+      document.getElementById('userName').textContent = '示範用戶';
+      document.getElementById('userSub').textContent  = '瀏覽器預覽模式';
+      renderGroups([
+        { group_id: 'demo1', group_name: '天秤座好友團', invite_code: 'AB1234' },
+        { group_id: 'demo2', group_name: '星座研究社',   invite_code: 'XY9876' }
+      ]);
+    }
+  }
+
+  async function loadGroups() {
+    try {
+      const r = await fetch(`${API}/group-list`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid })
+      });
+      const d = await r.json();
+      renderGroups(d.groups || []);
+    } catch { showToast('載入失敗', 'err'); renderGroups([]); }
+  }
+
+  function renderGroups(list) {
+    const el = document.getElementById('groupList');
+    if (!list.length) {
+      el.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🌌</div>
+          <div class="empty-title">尚未加入任何群組</div>
+          <div class="empty-desc">建立群組邀請朋友，或輸入驗證碼加入朋友的群組</div>
+        </div>`;
+      return;
+    }
+    el.innerHTML = list.map(g => `
+      <div class="group-card" onclick="goRoom('${x(g.group_id)}','${x(g.group_name)}','${x(g.invite_code)}')">
+        <div class="group-icon">✦</div>
+        <div class="group-info">
+          <div class="group-name">${x(g.group_name)}</div>
+          <span class="invite-chip">${x(g.invite_code)}</span>
+        </div>
+        <div class="group-arrow">›</div>
+      </div>`).join('');
+  }
+
+  async function createGroup() {
+    const name = document.getElementById('groupNameInput').value.trim();
+    if (!name) { showToast('請輸入群組名稱', 'err'); return; }
+    const btn = document.getElementById('createBtn');
+    btn.disabled = true; btn.textContent = '建立中...';
+    try {
+      const r = await fetch(`${API}/group-create`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, group_name: name })
+      });
+      const d = await r.json();
+      if (!d.success) throw new Error(d.message || '建立失敗');
+      createdGid   = d.group_id;
+      createdGname = name;
+      createdCode  = d.invite_code;
+      document.getElementById('createdCode').textContent    = d.invite_code;
+      document.getElementById('createTitle').textContent    = `「${name}」建立成功！`;
+      document.getElementById('createForm').style.display   = 'none';
+      document.getElementById('createDone').style.display   = 'block';
+      loadGroups();
+    } catch (e) {
+      showToast(e.message || '建立失敗', 'err');
+      btn.disabled = false; btn.textContent = '建立';
+    }
+  }
+
+  function enterCreated() {
+    closeSheet('createSheet');
+    goRoom(createdGid, createdGname, createdCode);
+  }
+
+  async function joinGroup() {
+    const code = document.getElementById('codeInput').value.trim().toUpperCase();
+    if (code.length !== 6) { showToast('請輸入 6 位驗證碼', 'err'); return; }
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = true; btn.textContent = '加入中...';
+    try {
+      const r = await fetch(`${API}/group-join`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, invite_code: code })
+      });
+      const d = await r.json();
+      if (!d.success) throw new Error(d.message || '加入失敗');
+      closeSheet('joinSheet');
+      showToast(d.already_member ? '你已在此群組' : `已加入「${d.group_name}」！`, 'ok');
+      loadGroups();
+      setTimeout(() => goRoom(d.group_id, d.group_name, d.invite_code), 700);
+    } catch (e) {
+      showToast(e.message || '驗證碼錯誤', 'err');
+      btn.disabled = false; btn.textContent = '加入';
+    }
+  }
+
+  function goRoom(gid, gname, code) {
+    location.href = `group_room.html?group_id=${encodeURIComponent(gid)}&group_name=${encodeURIComponent(gname)}&uid=${encodeURIComponent(uid)}&invite_code=${encodeURIComponent(code)}`;
+  }
+
+  function openSheet(id) {
+    if (id === 'createSheet') {
+      document.getElementById('groupNameInput').value       = '';
+      document.getElementById('createTitle').textContent    = '建立新群組';
+      document.getElementById('createForm').style.display   = 'block';
+      document.getElementById('createDone').style.display   = 'none';
+      const b = document.getElementById('createBtn');
+      b.disabled = false; b.textContent = '建立';
+    }
+    if (id === 'joinSheet') {
+      document.getElementById('codeInput').value  = '';
+      const b = document.getElementById('joinBtn');
+      b.disabled = false; b.textContent = '加入';
+    }
+    document.getElementById(id).classList.add('open');
+  }
+  function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+  function closeOnBg(e, id) { if (e.target === e.currentTarget) closeSheet(id); }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast ${type} show`;
+    setTimeout(() => { t.className = 'toast'; }, 2500);
+  }
+
+  function x(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>
