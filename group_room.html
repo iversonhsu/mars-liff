@@ -60,6 +60,13 @@
     .header-gname {
       font-size: 18px; font-weight: 700; color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: pointer;
+      display: inline-block;
+      max-width: 100%;
+      border: 1.5px solid rgba(124,58,237,0.3);
+      border-radius: 8px;
+      padding: 3px 10px;
+      box-shadow: 0 2px 5px rgba(124,58,237,0.15);
     }
     /* 右側代碼區塊 */
     .header-code-btn {
@@ -346,7 +353,7 @@
 <header class="header">
   <div class="back-btn" onclick="goBack()">←</div>
   <div class="header-mid">
-    <div class="header-gname" id="groupName">載入中...</div>
+    <div class="header-gname" id="groupName" onclick="openRename()">載入中...</div>
   </div>
   <div class="header-code-btn" onclick="copyCode()">
     <div class="header-code-hint" id="copyHint">點擊複製代碼</div>
@@ -390,6 +397,23 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Rename Modal -->
+<div class="help-overlay" id="renameOverlay" onclick="closeRename()">
+  <div class="help-sheet" onclick="event.stopPropagation()">
+    <div class="help-handle"></div>
+    <div class="help-title">修改群組名稱</div>
+    <input type="text" id="renameInput" maxlength="20" placeholder="輸入新名稱..."
+      style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);font-size:15px;font-family:inherit;margin-bottom:16px;outline:none;box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')confirmRename()">
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeRename()"
+        style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">取消</button>
+      <button onclick="confirmRename()"
+        style="flex:1;padding:12px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">確認</button>
+    </div>
+  </div>
+</div>
 
 <!-- Help Modal -->
 <div class="help-overlay" id="helpOverlay" onclick="closeHelp()">
@@ -620,6 +644,38 @@
   /* ── Helpers ─────────────────────────────────────────────────── */
   function openHelp()  { document.getElementById('helpOverlay').classList.add('open'); }
   function closeHelp() { document.getElementById('helpOverlay').classList.remove('open'); }
+
+  function openRename() {
+    if (!group_id || uid === 'demo_user') return;
+    document.getElementById('renameInput').value = document.getElementById('groupName').textContent;
+    document.getElementById('renameOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('renameInput').focus(), 300);
+  }
+  function closeRename() {
+    document.getElementById('renameOverlay').classList.remove('open');
+  }
+  async function confirmRename() {
+    const newName = document.getElementById('renameInput').value.trim();
+    if (!newName) return;
+    if (newName === document.getElementById('groupName').textContent) { closeRename(); return; }
+    try {
+      const r = await fetch(`${API}/group-rename`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ group_id, new_name: newName, uid })
+      });
+      const data = await r.json();
+      if (data.success) {
+        document.getElementById('groupName').textContent = newName;
+        document.title = newName;
+        closeRename();
+        showToast('群組名稱已更新', 'ok');
+      } else {
+        showToast('更新失敗，請重試');
+      }
+    } catch {
+      showToast('更新失敗，請重試');
+    }
+  }
 
   function goBack() {
     if (document.referrer) history.back();
