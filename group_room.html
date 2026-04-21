@@ -168,6 +168,7 @@
     .el-earth { background: var(--earth-bg); color: var(--earth-c); }
     .el-wind  { background: var(--wind-bg);  color: var(--wind-c);  }
     .el-water { background: var(--water-bg); color: var(--water-c); }
+    .el-earth .el-icon { transform: translateY(-1px); }
 
     /* ── Divider ── */
     .divider { height: 1px; background: var(--border); margin: 22px 0 20px; }
@@ -372,7 +373,7 @@
 
   <!-- Segmented Toggle -->
   <div class="rank-toggle">
-    <button class="rank-tab active" id="tab-score"    onclick="switchTab('score')">🏆 得分王</button>
+    <button class="rank-tab active" id="tab-score"    onclick="switchTab('score')">🧠 知識王</button>
     <button class="rank-tab"        id="tab-interact" onclick="switchTab('interact')">📸 互動王</button>
   </div>
 
@@ -396,7 +397,7 @@
     <div class="help-handle"></div>
     <div class="help-title">本週排名說明</div>
     <div class="help-item">
-      <div class="help-item-title">🏆 得分王</div>
+      <div class="help-item-title">🧠 知識王</div>
       <div class="help-item-desc">獲得最多靈氣點數的人。點數可透過每日答題獲得，後方顯示的是答題的正確率。此排名每週重新計算。</div>
     </div>
     <div class="help-item">
