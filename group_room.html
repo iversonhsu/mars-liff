@@ -431,7 +431,8 @@
   /* ── Init ─────────────────────────────────────────────────────  */
   async function init() {
     if (!group_id || !uid || uid === 'demo_user') { renderDemo(); return; }
-    await Promise.all([loadMembers(), loadRankings()]);
+    await loadMembers();
+    await loadRankings();
   }
 
   /* ── Members ─────────────────────────────────────────────────── */
