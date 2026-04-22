@@ -129,6 +129,17 @@
       box-shadow: 0 2px 12px rgba(124,58,237,0.13);
     }
     .member-card.is-self .member-name { color: var(--primary); }
+    .member-toggle-btn {
+      width: 100%; background: var(--card);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 11px; margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: var(--primary);
+      cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .member-toggle-btn:active { background: var(--pri-bg); }
+    .member-toggle-icon { transition: transform 0.22s ease; display: flex; }
     .member-avatar {
       width: 52px; height: 52px; border-radius: 12px;
       background: var(--pri-bg);
@@ -728,26 +739,23 @@
       { key:'water', icon:'💧', label:'水', cls:'water' }
     ];
 
-    document.getElementById('memberList').innerHTML = members.map(m => {
-      const isSelf  = m.uid === uid;
+    const cardHtml = m => {
+      const isSelf = m.uid === uid;
       if (isSelf) {
-        myNickname = m.nickname  || '';
+        myNickname = m.nickname || '';
         myAvatar   = m.line_avatar || '';
         updateDrawerProfile();
       }
-      const avatar  = m.line_avatar
+      const avatar = m.line_avatar
         ? `<img src="${x(m.line_avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
         : '🌟';
-
-      const aura    = Number(m.aura_points) || 0;
-
+      const aura  = Number(m.aura_points) || 0;
       const chips = els.map(e => {
         const val = Number(m[`current10_${e.key}`]) || 0;
         return `<span class="el-chip el-${e.cls}">
           <span class="el-icon">${e.icon}</span><span class="el-label">${e.label}</span><span class="el-val">${val}</span>
         </span>`;
       }).join('');
-
       return `
         <div class="member-card${isSelf ? ' is-self' : ''}">
           <div class="member-avatar">${avatar}</div>
@@ -759,7 +767,38 @@
             <div class="elements">${chips}</div>
           </div>
         </div>`;
-    }).join('');
+    };
+
+    const LIMIT  = 5;
+    const shown  = members.slice(0, LIMIT);
+    const extra  = members.slice(LIMIT);
+    const total  = members.length;
+
+    let html = shown.map(cardHtml).join('');
+    if (extra.length) {
+      html += `
+        <div id="memberExtra" style="display:none">${extra.map(cardHtml).join('')}</div>
+        <button class="member-toggle-btn" id="memberToggleBtn" onclick="toggleMemberExtra()">
+          <span id="memberToggleLabel">查看全部成員</span>
+          <span class="member-toggle-icon" id="memberToggleIcon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+              <path d="M7 9.5L1.5 4h11L7 9.5z"/>
+            </svg>
+          </span>
+        </button>`;
+    }
+    document.getElementById('memberList').innerHTML = html;
+  }
+
+  function toggleMemberExtra() {
+    const extra  = document.getElementById('memberExtra');
+    const label  = document.getElementById('memberToggleLabel');
+    const icon   = document.getElementById('memberToggleIcon');
+    const btn    = document.getElementById('memberToggleBtn');
+    const isOpen = extra.style.display !== 'none';
+    extra.style.display   = isOpen ? 'none' : 'block';
+    icon.style.transform  = isOpen ? '' : 'rotate(180deg)';
+    label.textContent     = isOpen ? '查看全部成員' : '收起';
   }
 
   /* ── Rankings ────────────────────────────────────────────────── */
