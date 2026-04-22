@@ -325,6 +325,136 @@
       font-size: 13px; color: var(--subtext); line-height: 1.7;
     }
 
+    /* ── Menu Button ── */
+    .menu-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 18px; flex-shrink: 0;
+      transition: background 0.12s;
+    }
+    .menu-btn:active { background: var(--border); }
+
+    /* ── Right Drawer ── */
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 300;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.22s, visibility 0.22s;
+    }
+    .drawer-overlay.open { opacity: 1; visibility: visible; }
+    .drawer-profile {
+      padding: 16px 14px 14px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+      background: #fff0f3;
+    }
+    .drawer-avatar {
+      width: 46px; height: 46px; border-radius: 12px;
+      background: var(--pri-bg);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; overflow: hidden; flex-shrink: 0;
+    }
+    .drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .drawer-name-row {
+      position: relative;
+      width: 100%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .drawer-uname {
+      font-size: 13px; font-weight: 700; color: var(--primary);
+      text-align: center;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: calc(100% - 20px);
+    }
+    .drawer-edit-icon {
+      position: absolute; right: -4px;
+      top: 50%; transform: translateY(-50%);
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center;
+    }
+    .drawer-panel {
+      position: absolute; top: 0; right: 0; bottom: 0;
+      width: 27%; max-width: 112px;
+      background: var(--card);
+      padding: 0;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+      display: flex; flex-direction: column;
+      box-shadow: -6px 0 28px rgba(0,0,0,0.16);
+      border-left: 1px solid var(--border);
+    }
+    .drawer-overlay.open .drawer-panel { transform: translateX(0); }
+    .drawer-item {
+      padding: 14px 8px;
+      font-size: 16px; font-weight: 600; color: var(--text);
+      cursor: pointer; transition: all 0.12s;
+      border-left: 3px solid transparent;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .drawer-item:active {
+      background: var(--pri-bg);
+      border-left-color: var(--primary);
+      color: var(--primary);
+    }
+    .drawer-item.blue  { color: #2563eb; }
+    .drawer-item.green { color: #16a34a; }
+    .drawer-item.blue:active  { background: #eff6ff; border-left-color: #2563eb; }
+    .drawer-item.green:active { background: #f0fdf4; border-left-color: #16a34a; }
+    .drawer-item.danger { color: #dc2626; }
+    .drawer-item.danger:active { background: #fff1f2; border-left-color: #dc2626; }
+    @media (hover: hover) {
+      .drawer-item:hover        { background: var(--pri-bg); border-left-color: var(--primary); color: var(--primary); }
+      .drawer-item.blue:hover   { background: #eff6ff; border-left-color: #2563eb; color: #2563eb; }
+      .drawer-item.green:hover  { background: #f0fdf4; border-left-color: #16a34a; color: #16a34a; }
+      .drawer-item.danger:hover { background: #fff1f2; border-left-color: #dc2626; color: #dc2626; }
+    }
+    .drawer-item.sep { border-bottom: 1px solid #b0adc0; }
+
+    /* ── Confirm Dialog ── */
+    .confirm-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 400;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+    }
+    .confirm-overlay.open { opacity: 1; visibility: visible; }
+    .confirm-box {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px 20px 20px;
+      width: 88%; max-width: 320px;
+      transform: scale(0.94);
+      transition: transform 0.2s cubic-bezier(0.32,0.72,0,1);
+    }
+    .confirm-overlay.open .confirm-box { transform: scale(1); }
+    .confirm-title {
+      font-size: 17px; font-weight: 700;
+      color: #dc2626; margin-bottom: 10px;
+    }
+    .confirm-msg {
+      font-size: 14px; color: var(--subtext);
+      line-height: 1.65; margin-bottom: 20px;
+    }
+    .confirm-btns { display: flex; gap: 10px; }
+    .confirm-btn {
+      flex: 1; padding: 12px 0;
+      border-radius: 10px; border: none;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer;
+      font-family: 'Noto Sans TC', -apple-system, sans-serif;
+      transition: opacity 0.15s;
+    }
+    .confirm-btn:active { opacity: 0.75; }
+    .confirm-btn.cancel { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+    .confirm-btn.leave  { background: #dc2626; color: #fff; }
+
     /* ── Loading ── */
     .loading { display: flex; justify-content: center; padding: 52px; }
     .spinner {
@@ -361,6 +491,7 @@
     <div class="header-code-hint" id="copyHint">點擊複製代碼</div>
     <div class="header-code-val" id="codeChip">------</div>
   </div>
+  <div class="menu-btn" onclick="openMenu()">☰</div>
 </header>
 
 <div class="container">
@@ -400,6 +531,42 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Right Drawer Menu -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target===this)closeMenu()">
+  <div class="drawer-panel">
+    <div class="drawer-profile">
+      <div class="drawer-avatar" id="drawerAvatar">🌟</div>
+      <div class="drawer-name-row">
+        <span class="drawer-uname" id="drawerName">---</span>
+        <span class="drawer-edit-icon" onclick="alert('coming soon')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+    <div class="drawer-item" onclick="showToast('即將推出')">個人檔案</div>
+    <div class="drawer-item" onclick="showToast('即將推出')">星獸收集</div>
+    <div class="drawer-item" onclick="showToast('即將推出')">測驗對戰</div>
+    <div class="drawer-item sep"         onclick="showToast('即將推出')">心情札記</div>
+    <div class="drawer-item blue sep"    onclick="showToast('即將推出')">邀請好友</div>
+    <div class="drawer-item green sep"   onclick="closeMenu(); goBack()">切換群組</div>
+    <div class="drawer-item danger"      onclick="closeMenu(); openLeaveConfirm()">退出群組</div>
+  </div>
+</div>
+
+<!-- Leave Confirm Dialog -->
+<div class="confirm-overlay" id="confirmOverlay" onclick="closeLeaveConfirm()">
+  <div class="confirm-box" onclick="event.stopPropagation()">
+    <div class="confirm-title">退出群組</div>
+    <div class="confirm-msg" id="confirmMsg">確定要退出此群組嗎？退出後可再次輸入驗證碼重新加入。</div>
+    <div class="confirm-btns">
+      <button class="confirm-btn cancel" onclick="closeLeaveConfirm()">取消</button>
+      <button class="confirm-btn leave"  id="leaveBtn" onclick="confirmLeave()">確認退出</button>
+    </div>
+  </div>
+</div>
+
 <!-- Rename Modal -->
 <div class="help-overlay" id="renameOverlay" onclick="closeRename()">
   <div class="help-sheet" onclick="event.stopPropagation()">
@@ -436,6 +603,7 @@
 <script>
   const API = 'https://webbermars.app.n8n.cloud/webhook';
   let myNickname = '';
+  let myAvatar   = '';
 
   const p          = new URLSearchParams(location.search);
   const group_id   = p.get('group_id')    || '';
@@ -495,7 +663,11 @@
 
     document.getElementById('memberList').innerHTML = members.map(m => {
       const isSelf  = m.uid === uid;
-      if (isSelf) myNickname = m.nickname || '';
+      if (isSelf) {
+        myNickname = m.nickname  || '';
+        myAvatar   = m.line_avatar || '';
+        updateDrawerProfile();
+      }
       const avatar  = m.line_avatar
         ? `<img src="${x(m.line_avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
         : '🌟';
@@ -615,6 +787,8 @@
   function renderDemo() {
     document.getElementById('groupName').textContent = '天秤座好友團（預覽）';
     document.getElementById('codeChip').textContent  = 'AB1234';
+    myNickname = '你（示範）'; myAvatar = '';
+    updateDrawerProfile();
 
     renderMembers([
       { uid:'demo_user', nickname:'你（示範）', aura_points:320, line_avatar:'',
@@ -676,6 +850,52 @@
       }
     } catch {
       showToast('更新失敗，請重試');
+    }
+  }
+
+  /* ── Drawer Profile ─────────────────────────────────────────────── */
+  function updateDrawerProfile() {
+    const nameEl   = document.getElementById('drawerName');
+    const avatarEl = document.getElementById('drawerAvatar');
+    if (nameEl)   nameEl.textContent = myNickname || '---';
+    if (avatarEl) avatarEl.innerHTML = myAvatar
+      ? `<img src="${x(myAvatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
+      : '🌟';
+  }
+
+  /* ── Menu / Leave ─────────────────────────────────────────────── */
+  function openMenu()  {
+    document.getElementById('drawerOverlay').classList.add('open');
+  }
+  function closeMenu() { document.getElementById('drawerOverlay').classList.remove('open'); }
+
+  function openLeaveConfirm() {
+    const gname = document.getElementById('groupName').textContent;
+    document.getElementById('confirmMsg').textContent =
+      `確定要退出「${gname}」嗎？退出後可再次輸入驗證碼重新加入。`;
+    document.getElementById('confirmOverlay').classList.add('open');
+  }
+  function closeLeaveConfirm() { document.getElementById('confirmOverlay').classList.remove('open'); }
+
+  async function confirmLeave() {
+    if (!group_id || !uid || uid === 'demo_user') {
+      closeLeaveConfirm();
+      showToast('示範模式，無法實際退出');
+      return;
+    }
+    const btn = document.getElementById('leaveBtn');
+    btn.disabled = true; btn.textContent = '退出中...';
+    try {
+      const r = await fetch(`${API}/group-leave`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, group_id })
+      });
+      const d = await r.json();
+      if (!d.success) throw new Error('退出失敗');
+      location.href = 'group_home.html';
+    } catch {
+      showToast('退出失敗，請重試');
+      btn.disabled = false; btn.textContent = '確認退出';
     }
   }
 
