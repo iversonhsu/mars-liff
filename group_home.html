@@ -122,7 +122,7 @@
     .group-arrow { color: var(--muted); font-size: 20px; flex-shrink: 0; }
 
     /* ─── Drag Reorder ─── */
-    .group-card { user-select: none; -webkit-user-select: none; }
+    .group-card { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
     .group-card.dragging { opacity: 0.18; box-shadow: none !important; transform: none !important; }
     .drag-ghost {
       position: fixed; pointer-events: none; z-index: 999;
@@ -144,6 +144,11 @@
     }
     .drag-handle:active { cursor: grabbing; }
     @media (hover: hover) { .drag-handle { display: flex; } }
+    .drag-hint {
+      font-size: 11px; color: var(--muted); text-align: right;
+      margin-bottom: 6px; margin-top: -4px;
+    }
+    @media (hover: hover) { .drag-hint { display: none; } }
 
     /* ── Empty ── */
     .empty {
@@ -343,7 +348,7 @@
   let createdGid = '', createdGname = '', createdCode = '';
   let _groups = [], _dragActive = false, _dragIdx = -1, _dropIdx = -1;
   let _ghost = null, _lpTimer = null, _dragOffsetY = 0, _dropLineEl = null;
-  let _touchStartX = 0, _touchStartY = 0;
+  let _touchStartX = 0, _touchStartY = 0, _justDragged = false;
 
   async function init() {
     try {
@@ -397,8 +402,9 @@
         </div>`;
       return;
     }
-    el.innerHTML = _groups.map((g, i) => `
-      <div class="group-card" data-idx="${i}" onclick="if(!_dragActive)goRoom('${x(g.group_id)}','${x(g.group_name)}','${x(g.invite_code)}')">
+    el.innerHTML = (_groups.length >= 2 ? '<div class="drag-hint">長按群組可調整順序</div>' : '') +
+    _groups.map((g, i) => `
+      <div class="group-card" data-idx="${i}" onclick="if(!_dragActive&&!_justDragged)goRoom('${x(g.group_id)}','${x(g.group_name)}','${x(g.invite_code)}')">
         <div class="drag-handle">
           <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" opacity="0.4">
             <circle cx="4" cy="3.5" r="1.5"/><circle cx="10" cy="3.5" r="1.5"/>
@@ -442,6 +448,9 @@
     if (_groups.length < 2) return;
     const cards = [...document.querySelectorAll('.group-card')];
     cards.forEach((card, i) => {
+      // Prevent iOS long-press context menu
+      card.addEventListener('contextmenu', e => e.preventDefault());
+
       // Mobile: long-press 2s to start drag
       card.addEventListener('touchstart', e => {
         if (e.touches.length !== 1) return;
@@ -456,7 +465,8 @@
       card.addEventListener('touchmove', e => {
         if (_dragActive || !_lpTimer) return;
         const t = e.touches[0];
-        if (Math.hypot(t.clientX - _touchStartX, t.clientY - _touchStartY) > 8) cancelLP();
+        // 15px threshold — finger micro-trembling on mobile won't cancel
+        if (Math.hypot(t.clientX - _touchStartX, t.clientY - _touchStartY) > 15) cancelLP();
       }, { passive: true });
 
       card.addEventListener('touchend',    cancelLP);
@@ -515,6 +525,8 @@
     _ghost?.remove(); _ghost = null;
     _dropLineEl?.remove(); _dropLineEl = null;
     document.querySelector('.group-card.dragging')?.classList.remove('dragging');
+    _justDragged = true;
+    setTimeout(() => { _justDragged = false; }, 350);
 
     const di = _dragIdx, dp = _dropIdx;
     _dragIdx = -1; _dropIdx = -1;
