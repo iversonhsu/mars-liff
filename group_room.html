@@ -413,7 +413,7 @@
       .drawer-item.green:hover  { background: #f0fdf4; border-left-color: #16a34a; color: #16a34a; }
       .drawer-item.danger:hover { background: #fff1f2; border-left-color: #dc2626; color: #dc2626; }
     }
-    .drawer-item.sep { border-bottom: 1px solid #b0adc0; }
+    .drawer-item.sep { box-shadow: inset 0 -1px 0 #b0adc0; }
 
     /* ── Confirm Dialog ── */
     .confirm-overlay {
@@ -533,7 +533,7 @@
 
 <!-- Right Drawer Menu -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target===this)closeMenu()">
-  <div class="drawer-panel">
+  <div class="drawer-panel" ontouchstart="">
     <div class="drawer-profile">
       <div class="drawer-avatar" id="drawerAvatar">🌟</div>
       <div class="drawer-name-row">
@@ -559,7 +559,7 @@
 <div class="confirm-overlay" id="confirmOverlay" onclick="closeLeaveConfirm()">
   <div class="confirm-box" onclick="event.stopPropagation()">
     <div class="confirm-title">退出群組</div>
-    <div class="confirm-msg" id="confirmMsg">確定要退出此群組嗎？退出後可再次輸入驗證碼重新加入。</div>
+    <div class="confirm-msg" id="confirmMsg">確定要退出此群組嗎？退出後可再次輸入群組代碼重新加入。</div>
     <div class="confirm-btns">
       <button class="confirm-btn cancel" onclick="closeLeaveConfirm()">取消</button>
       <button class="confirm-btn leave"  id="leaveBtn" onclick="confirmLeave()">確認退出</button>
@@ -872,7 +872,7 @@
   function openLeaveConfirm() {
     const gname = document.getElementById('groupName').textContent;
     document.getElementById('confirmMsg').textContent =
-      `確定要退出「${gname}」嗎？退出後可再次輸入驗證碼重新加入。`;
+      `確定要退出「${gname}」嗎？退出後可再次輸入群組代碼重新加入。`;
     document.getElementById('confirmOverlay').classList.add('open');
   }
   function closeLeaveConfirm() { document.getElementById('confirmOverlay').classList.remove('open'); }
