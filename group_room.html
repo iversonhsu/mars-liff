@@ -961,10 +961,23 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid })
       });
-      renderGroupList((await r.json()).groups || []);
+      renderGroupList(applyGroupOrder((await r.json()).groups || []));
     } catch {
       listEl.innerHTML = '<div style="padding:16px;color:var(--muted);text-align:center">無法載入群組清單</div>';
     }
+  }
+
+  function applyGroupOrder(groups) {
+    if (!uid) return groups;
+    try {
+      const saved = JSON.parse(localStorage.getItem(`group_order_${uid}`) || '[]');
+      if (!saved.length) return groups;
+      const map = new Map(groups.map(g => [g.group_id, g]));
+      return [
+        ...saved.filter(id => map.has(id)).map(id => map.get(id)),
+        ...groups.filter(g => !saved.includes(g.group_id))
+      ];
+    } catch { return groups; }
   }
 
   function renderGroupList(groups, selectedIdx = -1) {
