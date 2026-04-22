@@ -708,6 +708,12 @@
     await loadRankings();
   }
 
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && group_id && uid && uid !== 'demo_user') {
+      loadRankings();
+    }
+  });
+
   /* ── Members ─────────────────────────────────────────────────── */
   async function loadMembers() {
     try {
