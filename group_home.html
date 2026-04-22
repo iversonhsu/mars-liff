@@ -139,6 +139,26 @@
     }
     .drag-handle:active { cursor: grabbing; color: var(--primary); }
     .drag-hint { font-size: 11px; color: var(--muted); }
+    .palette-btn {
+      background: none; border: none; cursor: pointer; padding: 4px;
+      border-radius: 8px; color: var(--muted);
+      display: flex; align-items: center; line-height: 1;
+    }
+    @media (hover: hover) { .palette-btn:hover { color: var(--primary); } }
+    .palette-btn:active { color: var(--primary); }
+    /* Color Sheet */
+    .color-group-row { padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    .color-group-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .color-group-label { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+    .color-swatches { display: flex; gap: 10px; align-items: center; }
+    .color-swatch {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.08);
+      cursor: pointer; flex-shrink: 0; padding: 0;
+      transition: transform 0.12s; outline: none;
+    }
+    .color-swatch:active { transform: scale(0.88); }
+    .color-swatch.active { outline: 2.5px solid var(--primary); outline-offset: 3px; }
 
     /* ── Empty ── */
     .empty {
@@ -288,7 +308,16 @@
 
   <div class="section-head">
     <div class="section-label" style="margin-bottom:0">我的群組</div>
-    <span class="drag-hint" id="dragHintText" style="display:none">長按可調整順序</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="drag-hint" id="dragHintText" style="display:none">長按可調整順序</span>
+      <button class="palette-btn" id="paletteBtn" onclick="openColorSheet()" style="display:none" title="更換群組底色">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+          <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+        </svg>
+      </button>
+    </div>
   </div>
   <div id="groupList"><div class="loading"><div class="spinner"></div></div></div>
 
@@ -299,7 +328,15 @@
   <button class="btn btn-primary"  onclick="openSheet('createSheet')">建立群組</button>
 </div>
 
-<!-- Drag Help Overlay -->
+<!-- Color Sheet -->
+<div class="overlay" id="colorSheet" onclick="closeOnBg(event,'colorSheet')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">更換群組底色</div>
+    <div id="colorSheetBody"></div>
+  </div>
+</div>
+
 <!-- Create Sheet -->
 <div class="overlay" id="createSheet" onclick="closeOnBg(event,'createSheet')">
   <div class="sheet">
@@ -344,6 +381,16 @@
   const API     = 'https://webbermars.app.n8n.cloud/webhook';
   const LIFF_ID = '2009047186-MXDITyXh';
 
+  const CARD_COLORS = [
+    { id:'white',  label:'白色',   bg:'#ffffff',  border:'#e5e3ec',               name:'#1c1a2e', chip_bg:'#ede9fe',               chip_text:'#5b21b6', arrow:'#9ca3af', handle:'#9ca3af', icon_bg:'#ede9fe',               star:'#7c3aed' },
+    { id:'black',  label:'黑色',   bg:'#1c1a2e',  border:'rgba(255,255,255,0.1)', name:'#ffffff', chip_bg:'rgba(255,255,255,0.12)',chip_text:'#c4b5fd', arrow:'#6b7280', handle:'#4b4868', icon_bg:'rgba(255,255,255,0.1)', star:'#c4b5fd' },
+    { id:'pink',   label:'淡粉色', bg:'#fce7f3',  border:'#f9a8d4',               name:'#831843', chip_bg:'#fbcfe8',               chip_text:'#9d174d', arrow:'#be185d', handle:'#f472b6', icon_bg:'#fbcfe8',               star:'#be185d' },
+    { id:'yellow', label:'淡黃色', bg:'#fefce8',  border:'#fde68a',               name:'#78350f', chip_bg:'#fde68a',               chip_text:'#92400e', arrow:'#d97706', handle:'#fbbf24', icon_bg:'#fde68a',               star:'#d97706' },
+    { id:'blue',   label:'淡藍色', bg:'#eff6ff',  border:'#bfdbfe',               name:'#1e3a8a', chip_bg:'#bfdbfe',               chip_text:'#1e40af', arrow:'#3b82f6', handle:'#93c5fd', icon_bg:'#bfdbfe',               star:'#1d4ed8' },
+    { id:'green',  label:'淡綠色', bg:'#f0fdf4',  border:'#bbf7d0',               name:'#14532d', chip_bg:'#bbf7d0',               chip_text:'#065f46', arrow:'#059669', handle:'#6ee7b7', icon_bg:'#bbf7d0',               star:'#059669' },
+  ];
+  let _cardColors = {};
+
   let uid = '';
   let createdGid = '', createdGname = '', createdCode = '';
   let _groups = [], _dragActive = false, _dragIdx = -1;
@@ -358,6 +405,7 @@
       if (!liff.isLoggedIn()) { liff.login(); return; }
       const p = await liff.getProfile();
       uid = p.userId;
+      loadCardColors();
       document.getElementById('userName').textContent = p.displayName;
       document.getElementById('userSub').textContent  = '已連線';
       if (p.pictureUrl)
@@ -396,8 +444,10 @@
   function _render() {
     const el = document.getElementById('groupList');
     const hint = document.getElementById('dragHintText');
+    const pal  = document.getElementById('paletteBtn');
     if (!_groups.length) {
       if (hint) hint.style.display = 'none';
+      if (pal)  pal.style.display  = 'none';
       el.innerHTML = `
         <div class="empty">
           <div class="empty-title">尚未加入任何群組</div>
@@ -406,23 +456,71 @@
       return;
     }
     if (hint) hint.style.display = _groups.length >= 2 ? 'inline' : 'none';
-    el.innerHTML = _groups.map((g, i) => `
-      <div class="group-card" data-idx="${i}" onclick="if(!_dragActive&&!_justDragged)goRoom('${x(g.group_id)}','${x(g.group_name)}','${x(g.invite_code)}')">
-        <div class="drag-handle">
+    if (pal)  pal.style.display  = 'flex';
+    el.innerHTML = _groups.map((g, i) => {
+      const cc = CARD_COLORS.find(c => c.id === (_cardColors[g.group_id] || 'white')) || CARD_COLORS[0];
+      const d  = cc.id === 'white';
+      const cardSt   = d ? '' : `style="background:${cc.bg};border-color:${cc.border};"`;
+      const handleSt = d ? '' : `style="color:${cc.handle};"`;
+      const iconSt   = d ? '' : `style="background:${cc.icon_bg};"`;
+      const nameSt   = d ? '' : `style="color:${cc.name};"`;
+      const chipSt   = d ? '' : `style="background:${cc.chip_bg};color:${cc.chip_text};"`;
+      const arrowSt  = d ? '' : `style="color:${cc.arrow};"`;
+      return `
+      <div class="group-card" data-idx="${i}" ${cardSt} onclick="if(!_dragActive&&!_justDragged)goRoom('${x(g.group_id)}','${x(g.group_name)}','${x(g.invite_code)}')">
+        <div class="drag-handle" ${handleSt}>
           <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" opacity="0.5">
             <circle cx="4" cy="3.5" r="1.5"/><circle cx="10" cy="3.5" r="1.5"/>
             <circle cx="4" cy="8"   r="1.5"/><circle cx="10" cy="8"   r="1.5"/>
             <circle cx="4" cy="12.5" r="1.5"/><circle cx="10" cy="12.5" r="1.5"/>
           </svg>
         </div>
-        <div class="group-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="#7c3aed"><path d="M9 1.5l1.8 5.4H17l-4.6 3.3 1.8 5.4L9 12.4l-5.2 3.2 1.8-5.4L1 6.9h6.2L9 1.5z"/></svg></div>
+        <div class="group-icon" ${iconSt}><svg width="18" height="18" viewBox="0 0 18 18" fill="${cc.star}"><path d="M9 1.5l1.8 5.4H17l-4.6 3.3 1.8 5.4L9 12.4l-5.2 3.2 1.8-5.4L1 6.9h6.2L9 1.5z"/></svg></div>
         <div class="group-info">
-          <div class="group-name">${x(g.group_name)}</div>
-          <span class="invite-chip">${x(g.invite_code)}</span>
+          <div class="group-name" ${nameSt}>${x(g.group_name)}</div>
+          <span class="invite-chip" ${chipSt}>${x(g.invite_code)}</span>
         </div>
-        <div class="group-arrow">›</div>
-      </div>`).join('');
+        <div class="group-arrow" ${arrowSt}>›</div>
+      </div>`;
+    }).join('');
     initDrag();
+  }
+
+  /* ─── Card Color ───────────────────────────────── */
+  function loadCardColors() {
+    if (!uid || uid === 'demo_user') return;
+    try { _cardColors = JSON.parse(localStorage.getItem(`group_card_colors_${uid}`) || '{}'); } catch {}
+  }
+
+  function saveCardColor(group_id, colorId) {
+    if (colorId === 'white') delete _cardColors[group_id]; else _cardColors[group_id] = colorId;
+    if (!uid || uid === 'demo_user') return;
+    try { localStorage.setItem(`group_card_colors_${uid}`, JSON.stringify(_cardColors)); } catch {}
+  }
+
+  function openColorSheet() {
+    if (!_groups.length) return;
+    const body = document.getElementById('colorSheetBody');
+    body.innerHTML = _groups.map(g => {
+      const cur = _cardColors[g.group_id] || 'white';
+      return `<div class="color-group-row">
+        <div class="color-group-label">${x(g.group_name)}</div>
+        <div class="color-swatches">
+          ${CARD_COLORS.map(c => `<button class="color-swatch${cur===c.id?' active':''}"
+            style="background:${c.bg};"
+            onclick="applyCardColor('${x(g.group_id)}','${c.id}',this)"
+            title="${c.label}"></button>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+    openSheet('colorSheet');
+  }
+
+  function applyCardColor(group_id, colorId, btn) {
+    saveCardColor(group_id, colorId);
+    btn.closest('.color-group-row').querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _render();
   }
 
   /* ─── Order Persistence ─────────────────────────── */
