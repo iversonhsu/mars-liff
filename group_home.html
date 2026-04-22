@@ -138,17 +138,11 @@
       border-radius: 2px; margin: 1px 0; pointer-events: none;
     }
     .drag-handle {
-      display: none; color: var(--muted);
-      padding: 4px 4px 4px 0; flex-shrink: 0;
-      cursor: grab; touch-action: none; align-items: center;
+      display: flex; align-items: center;
+      color: var(--muted); padding: 4px 6px 4px 0;
+      flex-shrink: 0; cursor: grab; touch-action: none;
     }
-    .drag-handle:active { cursor: grabbing; }
-    @media (hover: hover) { .drag-handle { display: flex; } }
-    .drag-hint {
-      font-size: 11px; color: var(--muted); text-align: right;
-      margin-bottom: 6px; margin-top: -4px;
-    }
-    @media (hover: hover) { .drag-hint { display: none; } }
+    .drag-handle:active { cursor: grabbing; color: var(--primary); }
 
     /* ── Empty ── */
     .empty {
@@ -247,6 +241,52 @@
     .success-code  { font-size: 32px; font-weight: 700; letter-spacing: 0.24em; color: var(--primary); }
     .success-hint  { font-size: 12px; color: var(--subtext); margin-top: 8px; line-height: 1.6; }
 
+    /* ── Section Head ── */
+    .section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .help-btn {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--bg); border: 1.5px solid var(--subtext);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--subtext);
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    .help-btn:active { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Help Overlay ── */
+    .help-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200; display: flex; align-items: flex-end;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.22s, visibility 0.22s;
+    }
+    .help-overlay.open { opacity: 1; visibility: visible; }
+    .help-sheet {
+      background: var(--card);
+      border-radius: 20px 20px 0 0;
+      padding: 0 20px 44px;
+      width: 100%;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+    }
+    .help-overlay.open .help-sheet { transform: translateY(0); }
+    .help-handle {
+      width: 36px; height: 4px; background: var(--border);
+      border-radius: 2px; margin: 14px auto 20px;
+    }
+    .help-title { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+    .help-item { margin-bottom: 16px; }
+    .help-item-title {
+      font-size: 14px; font-weight: 700;
+      color: var(--primary); margin-bottom: 5px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .help-item-desc { font-size: 13px; color: var(--subtext); line-height: 1.7; }
+
     /* ── Loading ── */
     .loading { display: flex; justify-content: center; padding: 48px; }
     .spinner {
@@ -290,7 +330,10 @@
     </div>
   </div>
 
-  <div class="section-label">我的群組</div>
+  <div class="section-head">
+    <div class="section-label" style="margin-bottom:0">我的群組</div>
+    <button class="help-btn" id="dragHelpBtn" style="display:none" onclick="openDragHelp()">?</button>
+  </div>
   <div id="groupList"><div class="loading"><div class="spinner"></div></div></div>
 
 </div>
@@ -298,6 +341,22 @@
 <div class="bottom-bar">
   <button class="btn btn-outline"  onclick="openSheet('joinSheet')">輸入群組代碼</button>
   <button class="btn btn-primary"  onclick="openSheet('createSheet')">建立群組</button>
+</div>
+
+<!-- Drag Help Overlay -->
+<div class="help-overlay" id="dragHelpOverlay" onclick="closeDragHelp()">
+  <div class="help-sheet" onclick="event.stopPropagation()">
+    <div class="help-handle"></div>
+    <div class="help-title">調整群組順序</div>
+    <div class="help-item">
+      <div class="help-item-title">⠿ 拖動排序</div>
+      <div class="help-item-desc">按住每個群組左側的 ⠿ 圖示並上下拖動，即可調整群組的顯示順序。順序會自動記住，下次打開也保持不變。</div>
+    </div>
+    <div class="help-item">
+      <div class="help-item-title">📱 手機操作</div>
+      <div class="help-item-desc">按住 ⠿ 圖示後直接拖動。也可以長按群組卡片兩秒進入拖動模式。</div>
+    </div>
+  </div>
 </div>
 
 <!-- Create Sheet -->
@@ -394,7 +453,9 @@
 
   function _render() {
     const el = document.getElementById('groupList');
+    const helpBtn = document.getElementById('dragHelpBtn');
     if (!_groups.length) {
+      if (helpBtn) helpBtn.style.display = 'none';
       el.innerHTML = `
         <div class="empty">
           <div class="empty-title">尚未加入任何群組</div>
@@ -402,11 +463,11 @@
         </div>`;
       return;
     }
-    el.innerHTML = (_groups.length >= 2 ? '<div class="drag-hint">長按群組可調整順序</div>' : '') +
-    _groups.map((g, i) => `
+    if (helpBtn) helpBtn.style.display = _groups.length >= 2 ? 'flex' : 'none';
+    el.innerHTML = _groups.map((g, i) => `
       <div class="group-card" data-idx="${i}" onclick="if(!_dragActive&&!_justDragged)goRoom('${x(g.group_id)}','${x(g.group_name)}','${x(g.invite_code)}')">
         <div class="drag-handle">
-          <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" opacity="0.4">
+          <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" opacity="0.5">
             <circle cx="4" cy="3.5" r="1.5"/><circle cx="10" cy="3.5" r="1.5"/>
             <circle cx="4" cy="8"   r="1.5"/><circle cx="10" cy="8"   r="1.5"/>
             <circle cx="4" cy="12.5" r="1.5"/><circle cx="10" cy="12.5" r="1.5"/>
@@ -472,11 +533,20 @@
       card.addEventListener('touchend',    cancelLP);
       card.addEventListener('touchcancel', cancelLP);
 
-      // Desktop: drag handle mousedown
-      card.querySelector('.drag-handle')?.addEventListener('mousedown', e => {
-        e.preventDefault();
-        startDrag(card, i, e.clientX, e.clientY);
-      });
+      // Drag handle: desktop mousedown + mobile touchstart
+      const handle = card.querySelector('.drag-handle');
+      if (handle) {
+        handle.addEventListener('mousedown', e => {
+          e.preventDefault();
+          startDrag(card, i, e.clientX, e.clientY);
+        });
+        handle.addEventListener('touchstart', e => {
+          if (e.touches.length !== 1) return;
+          e.preventDefault(); // must be passive:false to call this
+          const t = e.touches[0];
+          startDrag(card, i, t.clientX, t.clientY);
+        }, { passive: false });
+      }
     });
   }
 
@@ -635,6 +705,9 @@
   }
   function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
   function closeOnBg(e, id) { if (e.target === e.currentTarget) closeSheet(id); }
+
+  function openDragHelp()  { document.getElementById('dragHelpOverlay').classList.add('open'); }
+  function closeDragHelp() { document.getElementById('dragHelpOverlay').classList.remove('open'); }
 
   function showToast(msg, type = '') {
     const t = document.getElementById('toast');
