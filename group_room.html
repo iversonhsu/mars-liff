@@ -422,11 +422,11 @@
       display: flex; align-items: center;
       padding: 13px 10px; border-radius: 10px;
       cursor: pointer; transition: background 0.12s;
-      margin-bottom: 2px;
+      margin-bottom: 7px;
     }
     .switch-item:not(.current):active { background: var(--bg); }
     .switch-item.current  { background: var(--pri-bg); cursor: default; }
-    .switch-item.selected { background: #dbeafe; border: 1.5px solid #2563eb; }
+    .switch-item.selected { background: #dcfce7; border: 1.5px solid #16a34a; }
     @media (hover: hover) {
       .switch-item:not(.current):not(.selected):hover { background: var(--bg); }
     }
@@ -445,7 +445,7 @@
       transition: opacity 0.15s;
     }
     .switch-confirm-btn:active { opacity: 0.75; }
-    .switch-confirm-btn.ok     { background: #2563eb; color: #fff; }
+    .switch-confirm-btn.ok     { background: #16a34a; color: #fff; }
     .switch-confirm-btn.cancel { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
     .switch-item-name {
       flex: 1; min-width: 0;
