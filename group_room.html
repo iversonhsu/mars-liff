@@ -421,11 +421,14 @@
     .switch-item {
       display: flex; align-items: center;
       padding: 13px 10px; border-radius: 10px;
-      cursor: pointer; transition: background 0.12s;
+      cursor: pointer; transition: background 0.12s, transform 0.1s;
       margin-bottom: 2px;
     }
-    .switch-item:not(.current):active { background: #fde68a; }
-    .switch-item.current:active { background: var(--pri-bg); }
+    .switch-item:not(.current):active,
+    .switch-item.pressing {
+      background: #fde68a;
+      transform: scale(0.97);
+    }
     .switch-item.current { background: var(--pri-bg); cursor: default; }
     @media (hover: hover) {
       .switch-item:not(.current):hover { background: var(--bg); }
@@ -949,7 +952,7 @@
     const currentId = (!uid || uid === 'demo_user') ? 'demo1' : group_id;
     listEl.innerHTML = groups.map((g, i) => {
       const isCurrent = g.group_id === currentId;
-      return `<div class="switch-item${isCurrent ? ' current' : ''}" ${!isCurrent ? `onclick="switchToGroup(${i})"` : ''}>
+      return `<div class="switch-item${isCurrent ? ' current' : ''}" ${!isCurrent ? `ontouchstart="this.classList.add('pressing')" onclick="switchToGroup(${i})"` : ''}>
         <span class="switch-item-name">${x(g.group_name)}</span>
         ${isCurrent
           ? '<span class="switch-item-badge">目前群組</span>'
@@ -966,14 +969,16 @@
       showToast('示範模式，無法切換群組');
       return;
     }
-    closeSwitchGroup();
     const params = new URLSearchParams({
       group_id:   g.group_id,
       group_name: g.group_name,
       uid,
       invite_code: g.invite_code || ''
     });
-    location.href = `group_room.html?${params}`;
+    setTimeout(() => {
+      closeSwitchGroup();
+      location.href = `group_room.html?${params}`;
+    }, 180);
   }
 
   /* ── Menu / Leave ─────────────────────────────────────────────── */
