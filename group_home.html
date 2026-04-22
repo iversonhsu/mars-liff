@@ -123,26 +123,22 @@
 
     /* ─── Drag Reorder ─── */
     .group-card { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-    .group-card.dragging { opacity: 0.18; box-shadow: none !important; transform: none !important; }
     .drag-ghost {
       position: fixed; pointer-events: none; z-index: 999;
       background: var(--card); border: 1px solid var(--border);
       border-radius: 14px; padding: 16px;
       display: flex; align-items: center; gap: 12px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.24);
-      transform: scale(1.03) rotate(0.6deg);
-      opacity: 0.97;
-    }
-    .drop-line {
-      height: 3px; background: var(--primary);
-      border-radius: 2px; margin: 1px 0; pointer-events: none;
+      box-shadow: 0 24px 56px rgba(0,0,0,0.32), 0 8px 20px rgba(0,0,0,0.18);
+      transform: scale(1.05) rotate(1.2deg);
+      opacity: 1;
     }
     .drag-handle {
       display: flex; align-items: center;
-      color: var(--muted); padding: 4px 6px 4px 0;
+      color: var(--muted); padding: 0 3px 0 0;
       flex-shrink: 0; cursor: grab; touch-action: none;
     }
     .drag-handle:active { cursor: grabbing; color: var(--primary); }
+    .drag-hint { font-size: 11px; color: var(--muted); }
 
     /* ── Empty ── */
     .empty {
@@ -246,46 +242,6 @@
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 10px;
     }
-    .help-btn {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: var(--bg); border: 1.5px solid var(--subtext);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700; color: var(--subtext);
-      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
-      font-family: 'Noto Sans TC', sans-serif;
-    }
-    .help-btn:active { border-color: var(--primary); color: var(--primary); }
-
-    /* ── Help Overlay ── */
-    .help-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 200; display: flex; align-items: flex-end;
-      opacity: 0; visibility: hidden;
-      transition: opacity 0.22s, visibility 0.22s;
-    }
-    .help-overlay.open { opacity: 1; visibility: visible; }
-    .help-sheet {
-      background: var(--card);
-      border-radius: 20px 20px 0 0;
-      padding: 0 20px 44px;
-      width: 100%;
-      transform: translateY(100%);
-      transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
-    }
-    .help-overlay.open .help-sheet { transform: translateY(0); }
-    .help-handle {
-      width: 36px; height: 4px; background: var(--border);
-      border-radius: 2px; margin: 14px auto 20px;
-    }
-    .help-title { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
-    .help-item { margin-bottom: 16px; }
-    .help-item-title {
-      font-size: 14px; font-weight: 700;
-      color: var(--primary); margin-bottom: 5px;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .help-item-desc { font-size: 13px; color: var(--subtext); line-height: 1.7; }
 
     /* ── Loading ── */
     .loading { display: flex; justify-content: center; padding: 48px; }
@@ -332,7 +288,7 @@
 
   <div class="section-head">
     <div class="section-label" style="margin-bottom:0">我的群組</div>
-    <button class="help-btn" id="dragHelpBtn" style="display:none" onclick="openDragHelp()">?</button>
+    <span class="drag-hint" id="dragHintText" style="display:none">長按可調整順序</span>
   </div>
   <div id="groupList"><div class="loading"><div class="spinner"></div></div></div>
 
@@ -344,21 +300,6 @@
 </div>
 
 <!-- Drag Help Overlay -->
-<div class="help-overlay" id="dragHelpOverlay" onclick="closeDragHelp()">
-  <div class="help-sheet" onclick="event.stopPropagation()">
-    <div class="help-handle"></div>
-    <div class="help-title">調整群組順序</div>
-    <div class="help-item">
-      <div class="help-item-title">⠿ 拖動排序</div>
-      <div class="help-item-desc">按住每個群組左側的 ⠿ 圖示並上下拖動，即可調整群組的顯示順序。順序會自動記住，下次打開也保持不變。</div>
-    </div>
-    <div class="help-item">
-      <div class="help-item-title">📱 手機操作</div>
-      <div class="help-item-desc">按住 ⠿ 圖示後直接拖動。也可以長按群組卡片兩秒進入拖動模式。</div>
-    </div>
-  </div>
-</div>
-
 <!-- Create Sheet -->
 <div class="overlay" id="createSheet" onclick="closeOnBg(event,'createSheet')">
   <div class="sheet">
@@ -405,9 +346,10 @@
 
   let uid = '';
   let createdGid = '', createdGname = '', createdCode = '';
-  let _groups = [], _dragActive = false, _dragIdx = -1, _dropIdx = -1;
-  let _ghost = null, _lpTimer = null, _dragOffsetY = 0, _dropLineEl = null;
+  let _groups = [], _dragActive = false, _dragIdx = -1;
+  let _ghost = null, _lpTimer = null, _dragOffsetY = 0, _dragCardH = 0;
   let _touchStartX = 0, _touchStartY = 0, _justDragged = false;
+  let _nonDragCards = [], _naturalMidpoints = [], _dropSlot = -1, _dragCardEl = null;
 
   async function init() {
     try {
@@ -453,9 +395,9 @@
 
   function _render() {
     const el = document.getElementById('groupList');
-    const helpBtn = document.getElementById('dragHelpBtn');
+    const hint = document.getElementById('dragHintText');
     if (!_groups.length) {
-      if (helpBtn) helpBtn.style.display = 'none';
+      if (hint) hint.style.display = 'none';
       el.innerHTML = `
         <div class="empty">
           <div class="empty-title">尚未加入任何群組</div>
@@ -463,7 +405,7 @@
         </div>`;
       return;
     }
-    if (helpBtn) helpBtn.style.display = _groups.length >= 2 ? 'flex' : 'none';
+    if (hint) hint.style.display = _groups.length >= 2 ? 'inline' : 'none';
     el.innerHTML = _groups.map((g, i) => `
       <div class="group-card" data-idx="${i}" onclick="if(!_dragActive&&!_justDragged)goRoom('${x(g.group_id)}','${x(g.group_name)}','${x(g.invite_code)}')">
         <div class="drag-handle">
@@ -556,18 +498,38 @@
     if (_dragActive) return;
     _dragActive  = true;
     _dragIdx     = idx;
+    _dragCardEl  = card;
+
     const rect   = card.getBoundingClientRect();
     _dragOffsetY = clientY - rect.top;
+    _dragCardH   = card.offsetHeight + 10; // card height + margin-bottom
 
+    // Ghost: lifted card that follows the finger
     _ghost = document.createElement('div');
     _ghost.className = 'drag-ghost';
     _ghost.style.cssText = `width:${rect.width}px;height:${rect.height}px;top:${rect.top}px;left:${rect.left}px;`;
     _ghost.innerHTML = card.innerHTML;
     document.body.appendChild(_ghost);
-    card.classList.add('dragging');
 
-    _dropLineEl = document.createElement('div');
-    _dropLineEl.className = 'drop-line';
+    // Remove original from flow; remaining cards shift up to close the gap
+    card.style.display = 'none';
+
+    // Measure natural midpoints of remaining cards AFTER original is hidden
+    const allCards = [...document.querySelectorAll('.group-card')];
+    _nonDragCards = allCards.filter((_, i) => i !== idx);
+    _naturalMidpoints = _nonDragCards.map(c => {
+      const r = c.getBoundingClientRect();
+      return r.top + r.height / 2;
+    });
+
+    // Enable smooth sliding on remaining cards
+    _nonDragCards.forEach(c => {
+      c.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    });
+
+    // Apply initial shifts based on where the finger is
+    _dropSlot = _nonDragCards.length; // start: no shifts
+    updateShifts(calcDropSlot(clientY));
 
     document.addEventListener('touchmove',  onDragMove, { passive: false });
     document.addEventListener('touchend',   onDragEnd);
@@ -578,10 +540,27 @@
   function onDragMove(e) {
     if (!_dragActive) return;
     if (e.cancelable) e.preventDefault();
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    _ghost.style.top = (clientY - _dragOffsetY) + 'px';
-    _dropIdx = calcDropIdx(clientY);
-    placeDropLine();
+    const fingerY = e.touches ? e.touches[0].clientY : e.clientY;
+    _ghost.style.top = (fingerY - _dragOffsetY) + 'px';
+    updateShifts(calcDropSlot(fingerY));
+  }
+
+  // Use TARGET midpoints (natural + shift if applicable) for slot calculation.
+  // This gives exact transitions at visual card midpoints with hysteresis to prevent oscillation.
+  function calcDropSlot(fingerY) {
+    for (let j = 0; j < _naturalMidpoints.length; j++) {
+      const targetMid = _naturalMidpoints[j] + (j >= _dropSlot ? _dragCardH : 0);
+      if (fingerY < targetMid) return j;
+    }
+    return _naturalMidpoints.length;
+  }
+
+  function updateShifts(newSlot) {
+    if (newSlot === _dropSlot) return;
+    _dropSlot = newSlot;
+    _nonDragCards.forEach((c, j) => {
+      c.style.transform = j >= _dropSlot ? `translateY(${_dragCardH}px)` : '';
+    });
   }
 
   function onDragEnd() {
@@ -593,41 +572,35 @@
     document.removeEventListener('mouseup',    onDragEnd);
 
     _ghost?.remove(); _ghost = null;
-    _dropLineEl?.remove(); _dropLineEl = null;
-    document.querySelector('.group-card.dragging')?.classList.remove('dragging');
+
+    const toClean = [..._nonDragCards];
+    const di = _dragIdx, ds = _dropSlot;
+    _dragIdx = -1; _dropSlot = -1;
+    _nonDragCards = []; _naturalMidpoints = [];
+
     _justDragged = true;
     setTimeout(() => { _justDragged = false; }, 350);
 
-    const di = _dragIdx, dp = _dropIdx;
-    _dragIdx = -1; _dropIdx = -1;
+    // Determine new order
+    const nonDragging = _groups.filter((_, i) => i !== di);
+    nonDragging.splice(ds, 0, _groups[di]);
+    const changed = nonDragging.map(g => g.group_id).join(',') !== _groups.map(g => g.group_id).join(',');
 
-    if (dp >= 0 && dp !== di) {
-      const before = _groups.map(g => g.group_id).join(',');
-      const item   = _groups.splice(di, 1)[0];
-      _groups.splice(dp, 0, item);
-      if (_groups.map(g => g.group_id).join(',') !== before) {
-        saveOrder();
-        _render();
-      }
+    if (changed) {
+      _groups = nonDragging;
+      saveOrder();
+      toClean.forEach(c => { c.style.transition = ''; c.style.transform = ''; });
+      if (_dragCardEl) { _dragCardEl.style.display = ''; _dragCardEl = null; }
+      _render();
+    } else {
+      // No change: animate cards back to original positions
+      toClean.forEach(c => {
+        c.style.transition = 'transform 0.18s ease';
+        c.style.transform  = '';
+      });
+      if (_dragCardEl) { _dragCardEl.style.display = ''; _dragCardEl = null; }
+      setTimeout(() => { toClean.forEach(c => { c.style.transition = ''; }); }, 200);
     }
-  }
-
-  function calcDropIdx(clientY) {
-    const cards = [...document.querySelectorAll('.group-card:not(.dragging)')];
-    for (let i = 0; i < cards.length; i++) {
-      const r = cards[i].getBoundingClientRect();
-      if (clientY < r.top + r.height / 2) return i;
-    }
-    return cards.length;
-  }
-
-  function placeDropLine() {
-    if (!_dropLineEl) return;
-    const cards = [...document.querySelectorAll('.group-card:not(.dragging)')];
-    const gl    = document.getElementById('groupList');
-    if      (_dropIdx === 0)           gl.insertBefore(_dropLineEl, cards[0] || null);
-    else if (_dropIdx >= cards.length) gl.appendChild(_dropLineEl);
-    else                               gl.insertBefore(_dropLineEl, cards[_dropIdx]);
   }
 
   async function createGroup() {
