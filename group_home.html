@@ -383,7 +383,7 @@
 
   const CARD_COLORS = [
     { id:'white',  label:'白色',   bg:'#ffffff',  border:'#e5e3ec',               name:'#1c1a2e', chip_bg:'#ede9fe',               chip_text:'#5b21b6', arrow:'#9ca3af', handle:'#9ca3af', icon_bg:'#ede9fe',               star:'#7c3aed' },
-    { id:'black',  label:'黑色',   bg:'#1c1a2e',  border:'rgba(255,255,255,0.22)',name:'#ffffff', chip_bg:'#ede9fe',               chip_text:'#5b21b6', arrow:'#ffffff', handle:'#ffffff', icon_bg:'#ede9fe',               star:'#7c3aed' },
+    { id:'black',  label:'黑色',   bg:'#1c1a2e',  border:'#ffffff',               name:'#ffffff', chip_bg:'#ede9fe',               chip_text:'#5b21b6', arrow:'#ffffff', handle:'#ffffff', icon_bg:'#ede9fe',               star:'#7c3aed' },
     { id:'pink',   label:'淡粉色', bg:'#fce7f3',  border:'#f9a8d4',               name:'#831843', chip_bg:'#fbcfe8',               chip_text:'#9d174d', arrow:'#be185d', handle:'#f472b6', icon_bg:'#fbcfe8',               star:'#be185d' },
     { id:'yellow', label:'淡黃色', bg:'#fefce8',  border:'#fde68a',               name:'#78350f', chip_bg:'#fde68a',               chip_text:'#92400e', arrow:'#d97706', handle:'#fbbf24', icon_bg:'#fde68a',               star:'#d97706' },
     { id:'blue',   label:'淡藍色', bg:'#eff6ff',  border:'#bfdbfe',               name:'#1e3a8a', chip_bg:'#bfdbfe',               chip_text:'#1e40af', arrow:'#3b82f6', handle:'#93c5fd', icon_bg:'#bfdbfe',               star:'#1d4ed8' },
@@ -413,6 +413,7 @@
       loadGroups();
     } catch {
       uid = 'demo_user';
+      loadCardColors();
       document.getElementById('userName').textContent = '示範用戶';
       document.getElementById('userSub').textContent  = '瀏覽器預覽模式';
       renderGroups([
@@ -460,16 +461,17 @@
     el.innerHTML = _groups.map((g, i) => {
       const cc = CARD_COLORS.find(c => c.id === (_cardColors[g.group_id] || 'white')) || CARD_COLORS[0];
       const d  = cc.id === 'white';
-      const cardSt   = d ? '' : `style="background:${cc.bg};border-color:${cc.border};"`;
+      const cardSt   = d ? '' : `style="background:${cc.bg};border:1.5px solid ${cc.border};"`;
       const handleSt = d ? '' : `style="color:${cc.handle};"`;
       const iconSt   = d ? '' : `style="background:${cc.icon_bg};"`;
       const nameSt   = d ? '' : `style="color:${cc.name};"`;
       const chipSt   = d ? '' : `style="background:${cc.chip_bg};color:${cc.chip_text};"`;
       const arrowSt  = d ? '' : `style="color:${cc.arrow};"`;
+      const dotOp    = d ? '0.5' : '1';
       return `
       <div class="group-card" data-idx="${i}" ${cardSt} onclick="if(!_dragActive&&!_justDragged)goRoom('${x(g.group_id)}','${x(g.group_name)}','${x(g.invite_code)}')">
         <div class="drag-handle" ${handleSt}>
-          <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" opacity="0.5">
+          <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" opacity="${dotOp}">
             <circle cx="4" cy="3.5" r="1.5"/><circle cx="10" cy="3.5" r="1.5"/>
             <circle cx="4" cy="8"   r="1.5"/><circle cx="10" cy="8"   r="1.5"/>
             <circle cx="4" cy="12.5" r="1.5"/><circle cx="10" cy="12.5" r="1.5"/>
@@ -488,13 +490,13 @@
 
   /* ─── Card Color ───────────────────────────────── */
   function loadCardColors() {
-    if (!uid || uid === 'demo_user') return;
+    if (!uid) return;
     try { _cardColors = JSON.parse(localStorage.getItem(`group_card_colors_${uid}`) || '{}'); } catch {}
   }
 
   function saveCardColor(group_id, colorId) {
     if (colorId === 'white') delete _cardColors[group_id]; else _cardColors[group_id] = colorId;
-    if (!uid || uid === 'demo_user') return;
+    if (!uid) return;
     try { localStorage.setItem(`group_card_colors_${uid}`, JSON.stringify(_cardColors)); } catch {}
   }
 
@@ -606,6 +608,8 @@
     _ghost = document.createElement('div');
     _ghost.className = 'drag-ghost';
     _ghost.style.cssText = `width:${rect.width}px;height:${rect.height}px;top:${rect.top}px;left:${rect.left}px;`;
+    if (card.style.background) _ghost.style.background = card.style.background;
+    if (card.style.border)     _ghost.style.border     = card.style.border;
     _ghost.innerHTML = card.innerHTML;
     document.body.appendChild(_ghost);
 
