@@ -309,7 +309,7 @@
   <div class="section-head">
     <div class="section-label" style="margin-bottom:0">我的群組</div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <span class="drag-hint" id="dragHintText" style="display:none">長按可調整順序</span>
+      <span class="drag-hint" id="dragHintText" style="display:none">長按⠿可調整順序</span>
       <button class="palette-btn" id="paletteBtn" onclick="openColorSheet()" style="display:none" title="更換群組底色">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
@@ -332,7 +332,7 @@
 <div class="overlay" id="colorSheet" onclick="closeOnBg(event,'colorSheet')">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">更換群組底色</div>
+    <div class="sheet-title">更換顏色</div>
     <div id="colorSheetBody"></div>
   </div>
 </div>
@@ -383,7 +383,7 @@
 
   const CARD_COLORS = [
     { id:'white',  label:'白色',   bg:'#ffffff',  border:'#e5e3ec',               name:'#1c1a2e', chip_bg:'#ede9fe',               chip_text:'#5b21b6', arrow:'#9ca3af', handle:'#9ca3af', icon_bg:'#ede9fe',               star:'#7c3aed' },
-    { id:'black',  label:'黑色',   bg:'#1c1a2e',  border:'#ffffff',               name:'#ffffff', chip_bg:'#ede9fe',               chip_text:'#5b21b6', arrow:'#ffffff', handle:'#ffffff', icon_bg:'#ede9fe',               star:'#7c3aed' },
+    { id:'black',  label:'黑色',   bg:'#1c1a2e',  border:'#7c3aed',               name:'#ffffff', chip_bg:'#ede9fe',               chip_text:'#5b21b6', arrow:'#ffffff', handle:'#ffffff', icon_bg:'#ede9fe',               star:'#7c3aed' },
     { id:'pink',   label:'淡粉色', bg:'#fce7f3',  border:'#f9a8d4',               name:'#831843', chip_bg:'#fbcfe8',               chip_text:'#9d174d', arrow:'#be185d', handle:'#f472b6', icon_bg:'#fbcfe8',               star:'#be185d' },
     { id:'yellow', label:'淡黃色', bg:'#fefce8',  border:'#fde68a',               name:'#78350f', chip_bg:'#fde68a',               chip_text:'#92400e', arrow:'#d97706', handle:'#fbbf24', icon_bg:'#fde68a',               star:'#d97706' },
     { id:'blue',   label:'淡藍色', bg:'#eff6ff',  border:'#bfdbfe',               name:'#1e3a8a', chip_bg:'#bfdbfe',               chip_text:'#1e40af', arrow:'#3b82f6', handle:'#93c5fd', icon_bg:'#bfdbfe',               star:'#1d4ed8' },
