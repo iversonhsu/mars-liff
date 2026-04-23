@@ -764,11 +764,9 @@
       if (result) showToast('邀請已送出！', 'ok');
     } catch (e) {
       const code = e?.code || e?.errorCode || '';
-      if (code === 'FORBIDDEN' || code === 403) {
-        showToast('請先在 LINE 後台開啟 shareTargetPicker 權限');
-      } else {
-        showToast(`傳送失敗：${code || e?.message || '未知錯誤'}`);
-      }
+      const msg  = e?.message || '';
+      console.error('[shareTargetPicker]', e);
+      showToast(`邀請失敗 [${code || 'ERR'}] ${msg}`.slice(0, 60));
     }
   }
 
@@ -782,6 +780,12 @@
 
   /* ── Init ─────────────────────────────────────────────────────  */
   async function init() {
+    // Must init LIFF on page load so auth tokens from LIFF URL are captured correctly
+    try {
+      await liff.init({ liffId: LIFF_ID });
+      _liffReady = true;
+    } catch {}
+
     if (!group_id || !uid || uid === 'demo_user') { renderDemo(); return; }
     await loadMembers();
     await loadRankings();
