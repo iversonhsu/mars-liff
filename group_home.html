@@ -427,8 +427,13 @@
       if (p.pictureUrl)
         document.getElementById('userAvatar').innerHTML = `<img src="${p.pictureUrl}" alt="">`;
       loadGroups();
-      // 偵測邀請連結，直接自動加入
-      const urlCode = new URLSearchParams(location.search).get('invite_code');
+      // 偵測邀請連結，直接自動加入（相容 liff.state 包裝）
+      const _up = new URLSearchParams(location.search);
+      let urlCode = _up.get('invite_code');
+      if (!urlCode) {
+        const ls = _up.get('liff.state');
+        if (ls) { try { urlCode = new URLSearchParams(decodeURIComponent(ls).replace(/^\?/,'')).get('invite_code') || ''; } catch {} }
+      }
       if (urlCode) autoJoinFromInvite(urlCode.toUpperCase());
     } catch {
       uid = 'demo_user';
