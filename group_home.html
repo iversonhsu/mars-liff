@@ -375,11 +375,40 @@
   </div>
 </div>
 
+<!-- Invite Join Sheet (auto-triggered when opened via invite link) -->
+<div class="overlay" id="inviteSheet">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <!-- 確認加入 -->
+    <div id="inviteConfirmState">
+      <div style="text-align:center;padding:4px 0 24px">
+        <div style="font-size:40px;margin-bottom:14px">🌟</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">你收到了群組邀請</div>
+        <div style="font-size:13px;color:var(--subtext);margin-bottom:16px">邀請代碼</div>
+        <div id="inviteCodeShow" style="display:inline-block;font-size:24px;font-weight:700;letter-spacing:0.22em;color:var(--primary);background:var(--pri-bg);padding:8px 22px;border-radius:10px">------</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:10px" id="inviteJoinBtn" onclick="confirmInviteJoin()">加入群組</button>
+      <button class="btn btn-outline"  style="width:100%" onclick="closeSheet('inviteSheet')">取消</button>
+    </div>
+    <!-- 尚未註冊 -->
+    <div id="inviteNotRegState" style="display:none">
+      <div style="text-align:center;padding:4px 0 24px">
+        <div style="font-size:40px;margin-bottom:14px">⭐</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:12px">尚未設定星盤</div>
+        <div style="font-size:13px;color:var(--subtext);line-height:1.8;margin-bottom:4px">加入星際群組前，需先與<strong>星語守護者</strong>完成星盤設定。<br>設定完成後再回來點擊邀請連結，即可直接加入！</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="goToBot()">前往加入官方帳號</button>
+      <button class="btn btn-outline"  style="width:100%" onclick="closeSheet('inviteSheet')">稍後再說</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  const API     = 'https://webbermars.app.n8n.cloud/webhook';
-  const LIFF_ID = '2009047186-MXDITyXh';
+  const API         = 'https://webbermars.app.n8n.cloud/webhook';
+  const LIFF_ID     = '2009047186-MXDITyXh';
+  const LINE_BOT_ID = '@070rgzrs';
 
   const CARD_COLORS = [
     { id:'white',  label:'白色',   bg:'#ffffff',  border:'#e5e3ec',               name:'#1c1a2e', chip_bg:'#ede9fe',               chip_text:'#5b21b6', arrow:'#9ca3af', handle:'#9ca3af', icon_bg:'#ede9fe',               star:'#7c3aed' },
@@ -392,6 +421,7 @@
   let _cardColors = {};
 
   let uid = '';
+  let _pendingInviteCode = '';
   let createdGid = '', createdGname = '', createdCode = '';
   let _groups = [], _dragActive = false, _dragIdx = -1;
   let _ghost = null, _lpTimer = null, _dragOffsetY = 0, _dragCardH = 0;
@@ -411,6 +441,9 @@
       if (p.pictureUrl)
         document.getElementById('userAvatar').innerHTML = `<img src="${p.pictureUrl}" alt="">`;
       loadGroups();
+      // 偵測邀請連結
+      const urlCode = new URLSearchParams(location.search).get('invite_code');
+      if (urlCode) showInviteSheet(urlCode.toUpperCase());
     } catch {
       uid = 'demo_user';
       loadCardColors();
@@ -755,6 +788,56 @@
     } catch (e) {
       showToast(e.message || '驗證碼錯誤', 'err');
       btn.disabled = false; btn.textContent = '加入';
+    }
+  }
+
+  /* ── Invite Join ──────────────────────────────────────────────── */
+  function showInviteSheet(code) {
+    _pendingInviteCode = code;
+    document.getElementById('inviteCodeShow').textContent = code;
+    document.getElementById('inviteConfirmState').style.display = 'block';
+    document.getElementById('inviteNotRegState').style.display  = 'none';
+    const btn = document.getElementById('inviteJoinBtn');
+    btn.disabled = false; btn.textContent = '加入群組';
+    openSheet('inviteSheet');
+  }
+
+  async function confirmInviteJoin() {
+    if (!_pendingInviteCode || !uid || uid === 'demo_user') return;
+    const btn = document.getElementById('inviteJoinBtn');
+    btn.disabled = true; btn.textContent = '加入中...';
+    try {
+      const r = await fetch(`${API}/group-join`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, invite_code: _pendingInviteCode })
+      });
+      const d = await r.json();
+      if (!d.success) {
+        // 代碼相關錯誤（群組不存在等）直接顯示；其他視為未註冊
+        const msg = d.message || '';
+        if (msg.includes('代碼') || msg.includes('群組不存在') || msg.includes('找不到')) {
+          throw new Error(msg || '加入失敗');
+        }
+        document.getElementById('inviteConfirmState').style.display = 'none';
+        document.getElementById('inviteNotRegState').style.display  = 'block';
+        return;
+      }
+      closeSheet('inviteSheet');
+      showToast(d.already_member ? '你已在此群組' : `已加入「${d.group_name}」！`, 'ok');
+      loadGroups();
+      setTimeout(() => goRoom(d.group_id, d.group_name, d.invite_code), 700);
+    } catch (e) {
+      showToast(e.message || '加入失敗，請稍後重試', 'err');
+      btn.disabled = false; btn.textContent = '加入群組';
+    }
+  }
+
+  function goToBot() {
+    const url = `https://line.me/R/ti/p/${LINE_BOT_ID}`;
+    if (typeof liff !== 'undefined' && liff.isInClient()) {
+      liff.openWindow({ url, external: false });
+    } else {
+      window.open(url, '_blank');
     }
   }
 
