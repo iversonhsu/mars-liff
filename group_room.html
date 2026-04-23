@@ -719,9 +719,11 @@
     const ready = await ensureLiff();
     if (!ready || !liff.isInClient()) { showToast('請在 LINE 內使用邀請功能'); return; }
 
-    const inviteUrl   = `https://liff.line.me/${LIFF_ID}?invite_code=${encodeURIComponent(inv_code)}`;
+    const HOME_LIFF_ID = '2009047186-MXDITyXh';
+    const inviteUrl   = `https://liff.line.me/${HOME_LIFF_ID}?invite_code=${encodeURIComponent(inv_code)}`;
     const inviterName = myNickname || '朋友';
 
+    sessionStorage.setItem('pendingInvite', '1');
     try {
       const result = await liff.shareTargetPicker([{
         type: 'flex',
@@ -761,8 +763,10 @@
         }
       }], { isMultiple: true });
 
+      sessionStorage.removeItem('pendingInvite');
       if (result) showToast('邀請已送出！', 'ok');
     } catch (e) {
+      sessionStorage.removeItem('pendingInvite');
       const code = e?.code || e?.errorCode || '';
       const msg  = e?.message || '';
       console.error('[shareTargetPicker]', e);
@@ -780,7 +784,6 @@
 
   /* ── Init ─────────────────────────────────────────────────────  */
   async function init() {
-    // Must init LIFF on page load so auth tokens from LIFF URL are captured correctly
     try {
       await liff.init({ liffId: LIFF_ID });
       _liffReady = true;
@@ -789,6 +792,12 @@
     if (!group_id || !uid || uid === 'demo_user') { renderDemo(); return; }
     await loadMembers();
     await loadRankings();
+
+    // If a previous shareTargetPicker call caused a LIFF re-auth redirect, auto-reopen
+    if (sessionStorage.getItem('pendingInvite') === '1') {
+      sessionStorage.removeItem('pendingInvite');
+      setTimeout(() => openInvite(), 400);
+    }
   }
 
   document.addEventListener('visibilitychange', () => {
