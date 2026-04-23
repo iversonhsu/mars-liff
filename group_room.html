@@ -681,16 +681,25 @@
 
 <script>
   const API     = 'https://webbermars.app.n8n.cloud/webhook';
-  const LIFF_ID = '2009047186-MXDITyXh';
+  const LIFF_ID = '2009047186-N3sH6Pzd';
   let myNickname  = '';
   let myAvatar    = '';
   let _liffReady  = false;
 
-  const p          = new URLSearchParams(location.search);
-  const group_id   = p.get('group_id')    || '';
-  const group_name = p.get('group_name')  || '星際群組';
-  const uid        = p.get('uid')         || '';
-  const inv_code   = p.get('invite_code') || '';
+  // LIFF URL 導航時 params 會被包在 liff.state 裡，需額外解碼
+  function getUrlParam(key) {
+    const s = new URLSearchParams(location.search);
+    const v = s.get(key);
+    if (v !== null) return v;
+    const ls = s.get('liff.state');
+    if (ls) { try { return new URLSearchParams(decodeURIComponent(ls).replace(/^\?/, '')).get(key) || ''; } catch {} }
+    return '';
+  }
+
+  const group_id   = getUrlParam('group_id');
+  const group_name = getUrlParam('group_name') || '星際群組';
+  const uid        = getUrlParam('uid');
+  const inv_code   = getUrlParam('invite_code');
 
   document.getElementById('groupName').textContent = group_name;
   document.getElementById('codeChip').textContent  = inv_code || '------';
@@ -753,8 +762,13 @@
       }], { isMultiple: true });
 
       if (result) showToast('邀請已送出！', 'ok');
-    } catch {
-      showToast('邀請傳送失敗，請稍後再試');
+    } catch (e) {
+      const code = e?.code || e?.errorCode || '';
+      if (code === 'FORBIDDEN' || code === 403) {
+        showToast('請先在 LINE 後台開啟 shareTargetPicker 權限');
+      } else {
+        showToast(`傳送失敗：${code || e?.message || '未知錯誤'}`);
+      }
     }
   }
 
@@ -1137,7 +1151,7 @@
       invite_code: g.invite_code || ''
     });
     closeSwitchGroup();
-    location.href = `group_room.html?${params}`;
+    location.href = `https://liff.line.me/${LIFF_ID}?${params}`;
   }
 
   /* ── Menu / Leave ─────────────────────────────────────────────── */
