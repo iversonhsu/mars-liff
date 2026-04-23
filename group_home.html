@@ -814,7 +814,10 @@
   }
 
   function goRoom(gid, gname, code) {
-    location.href = `group_room.html?group_id=${encodeURIComponent(gid)}&group_name=${encodeURIComponent(gname)}&uid=${encodeURIComponent(uid)}&invite_code=${encodeURIComponent(code)}`;
+    const params = new URLSearchParams({ group_id: gid, group_name: gname, uid, invite_code: code });
+    location.href = (typeof liff !== 'undefined' && liff.isInClient())
+      ? `https://liff.line.me/2009047186-N3sH6Pzd?${params}`
+      : `group_room.html?${params}`;
   }
 
   function openSheet(id) {
