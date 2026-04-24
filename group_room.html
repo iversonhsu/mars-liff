@@ -605,7 +605,7 @@
       <div class="drawer-avatar" id="drawerAvatar">🌟</div>
       <div class="drawer-name-row">
         <span class="drawer-uname" id="drawerName">---</span>
-        <span class="drawer-edit-icon" onclick="alert('coming soon')">
+        <span class="drawer-edit-icon" onclick="openNicknameEdit()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
           </svg>
@@ -660,6 +660,23 @@
     <div class="switch-confirm-bar" id="switchConfirmBar">
       <button class="switch-confirm-btn cancel" onclick="cancelSwitch()">取消</button>
       <button class="switch-confirm-btn ok"     onclick="confirmSwitch()">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nickname Edit Modal -->
+<div class="help-overlay" id="nicknameOverlay" onclick="closeNicknameEdit()">
+  <div class="help-sheet" onclick="event.stopPropagation()">
+    <div class="help-handle"></div>
+    <div class="help-title">修改暱稱</div>
+    <input type="text" id="nicknameInput" maxlength="20" placeholder="輸入新暱稱..."
+      style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);font-size:15px;font-family:inherit;margin-bottom:16px;outline:none;box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')confirmNicknameEdit()">
+    <div style="display:flex;gap:10px;">
+      <button onclick="confirmNicknameEdit()"
+        style="flex:1;padding:12px;border-radius:10px;border:none;background:#8b5cf6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">確認修改</button>
+      <button onclick="closeNicknameEdit()"
+        style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">取消</button>
     </div>
   </div>
 </div>
@@ -735,7 +752,7 @@
           header: {
             type: 'box', layout: 'vertical',
             backgroundColor: '#7c3aed', paddingAll: '14px',
-            contents: [{ type: 'text', text: '星際群組邀請', color: '#ffffff', size: 'md', weight: 'bold' }]
+            contents: [{ type: 'text', text: '星際群組邀請', color: '#ffffff', size: 'md', weight: 'bold', align: 'center' }]
           },
           body: {
             type: 'box', layout: 'vertical',
@@ -1028,6 +1045,39 @@
   /* ── Helpers ─────────────────────────────────────────────────── */
   function openHelp()  { document.getElementById('helpOverlay').classList.add('open'); }
   function closeHelp() { document.getElementById('helpOverlay').classList.remove('open'); }
+
+  function openNicknameEdit() {
+    if (!uid || uid === 'demo_user') return;
+    document.getElementById('nicknameInput').value = myNickname || '';
+    document.getElementById('nicknameOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('nicknameInput').focus(), 300);
+  }
+  function closeNicknameEdit() {
+    document.getElementById('nicknameOverlay').classList.remove('open');
+  }
+  async function confirmNicknameEdit() {
+    const newName = document.getElementById('nicknameInput').value.trim();
+    if (!newName) return;
+    if (newName === myNickname) { closeNicknameEdit(); return; }
+    try {
+      const r = await fetch(`${API}/update-nickname`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, nickname: newName })
+      });
+      const data = await r.json();
+      if (data.success) {
+        myNickname = newName;
+        updateDrawerProfile();
+        closeNicknameEdit();
+        showToast('暱稱已更新', 'ok');
+        loadMembers();
+      } else {
+        showToast(data.message || '更新失敗，請重試');
+      }
+    } catch {
+      showToast('更新失敗，請重試');
+    }
+  }
 
   function openRename() {
     if (!group_id || uid === 'demo_user') return;
