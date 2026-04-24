@@ -286,7 +286,8 @@
       width: 28px; text-align: center; flex-shrink: 0;
     }
     .rank-expand-btn {
-      padding: 11px 16px; text-align: center;
+      padding: 11px 16px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
       font-size: 13px; font-weight: 600; color: var(--primary);
       cursor: pointer; border-top: 1px solid var(--border);
       transition: background 0.12s;
@@ -681,7 +682,7 @@
 
 <script>
   const API     = 'https://webbermars.app.n8n.cloud/webhook';
-  const LIFF_ID = '2009047186-N3sH6Pzd';
+  const LIFF_ID = '2009047186-MXDITyXh'; // Reuse home LIFF session; avoids LINE app-switch notification
   let myNickname  = '';
   let myAvatar    = '';
   let _liffReady  = false;
@@ -733,19 +734,20 @@
           size: 'kilo',
           header: {
             type: 'box', layout: 'vertical',
-            backgroundColor: '#7c3aed', paddingAll: '16px',
-            contents: [{ type: 'text', text: '🌟 星際群組邀請', color: '#ffffff', size: 'md', weight: 'bold' }]
+            backgroundColor: '#7c3aed', paddingAll: '14px',
+            contents: [{ type: 'text', text: '星際群組邀請', color: '#ffffff', size: 'md', weight: 'bold' }]
           },
           body: {
             type: 'box', layout: 'vertical',
-            paddingAll: '18px', spacing: 'sm',
+            paddingTop: '14px', paddingBottom: '10px', paddingStart: '16px', paddingEnd: '16px',
+            spacing: 'sm',
             contents: [
               { type: 'text', text: `${inviterName} 邀請你加入`, color: '#6b7280', size: 'sm', wrap: true },
               { type: 'text', text: group_name, color: '#1c1a2e', size: 'xl', weight: 'bold', wrap: true },
               {
                 type: 'box', layout: 'horizontal',
                 backgroundColor: '#ede9fe', cornerRadius: '8px',
-                paddingAll: '8px', margin: 'md',
+                paddingAll: '8px', margin: 'sm',
                 contents: [
                   { type: 'text', text: '群組代碼', color: '#5b21b6', size: 'xs', flex: 0 },
                   { type: 'text', text: inv_code, color: '#7c3aed', size: 'sm', weight: 'bold', align: 'end' }
@@ -754,9 +756,10 @@
             ]
           },
           footer: {
-            type: 'box', layout: 'vertical', paddingAll: '14px',
+            type: 'box', layout: 'vertical',
+            paddingTop: '10px', paddingBottom: '14px', paddingStart: '28px', paddingEnd: '28px',
             contents: [{
-              type: 'button', style: 'primary', color: '#7c3aed',
+              type: 'button', style: 'primary', color: '#7c3aed', height: 'sm',
               action: { type: 'uri', label: '立即加入群組', uri: inviteUrl }
             }]
           }
@@ -932,7 +935,7 @@
 
     function expandBtn(list) {
       if (list.length <= 3) return '';
-      return `<div class="rank-expand-btn" onclick="toggleRankFull(this)">查看完整排名 ↓</div>`;
+      return `<div class="rank-expand-btn" onclick="toggleRankFull(this)"><span class="rank-expand-label">查看完整排名</span><span class="member-toggle-icon" style="display:flex"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 9.5L1.5 4h11L7 9.5z"/></svg></span></div>`;
     }
 
     function scoreRows(list) {
@@ -981,10 +984,11 @@
   }
 
   function toggleRankFull(btn) {
-    const hidden   = btn.closest('.rank-card').querySelectorAll('.rank-hidden');
+    const hidden    = btn.closest('.rank-card').querySelectorAll('.rank-hidden');
     const expanding = hidden[0]?.style.display === 'none';
     hidden.forEach(r => r.style.display = expanding ? 'flex' : 'none');
-    btn.textContent = expanding ? '收起 ↑' : '查看完整排名 ↓';
+    btn.querySelector('.rank-expand-label').textContent = expanding ? '收起' : '查看完整排名';
+    btn.querySelector('.member-toggle-icon').style.transform = expanding ? 'rotate(180deg)' : '';
   }
 
   /* ── Demo ────────────────────────────────────────────────────── */
@@ -1164,7 +1168,7 @@
       invite_code: g.invite_code || ''
     });
     closeSwitchGroup();
-    location.href = `https://liff.line.me/${LIFF_ID}?${params}`;
+    location.href = `group_room.html?${params}`;
   }
 
   /* ── Menu / Leave ─────────────────────────────────────────────── */
