@@ -1536,9 +1536,20 @@
     const next = _jPastEntries.slice(_jShownCount, _jShownCount + J_PAGE);
     listEl.insertAdjacentHTML('beforeend', next.map(_entryCardHtml).join(''));
     _jShownCount += next.length;
-    wrapEl.innerHTML = _jShownCount < _jPastEntries.length
-      ? `<div class="journal-load-more" onclick="_appendJEntries()">查看更多<svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" style="margin-top:1px"><path d="M7 9.5L1.5 4h11L7 9.5z"/></svg></div>`
-      : '';
+    if (_jShownCount < _jPastEntries.length) {
+      wrapEl.innerHTML = `<div class="journal-load-more" onclick="_appendJEntries()">查看更多<svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" style="margin-top:1px"><path d="M7 9.5L1.5 4h11L7 9.5z"/></svg></div>`;
+    } else if (_jShownCount > J_PAGE) {
+      wrapEl.innerHTML = `<div class="journal-load-more" onclick="_collapseJEntries()"><svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" style="margin-top:1px;transform:rotate(180deg)"><path d="M7 9.5L1.5 4h11L7 9.5z"/></svg>收起</div>`;
+    } else {
+      wrapEl.innerHTML = '';
+    }
+  }
+
+  function _collapseJEntries() {
+    const listEl = document.getElementById('jPastList');
+    listEl.innerHTML = '';
+    _jShownCount = 0;
+    _appendJEntries();
   }
 
   function onJTodayInput(ta) {
