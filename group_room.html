@@ -571,10 +571,10 @@
       box-shadow: 0 2px 12px rgba(124,58,237,0.07);
     }
     .journal-today-tag {
-      display: inline-block;
-      font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
-      color: #be185d; background: #fce7f3;
-      border-radius: 20px; padding: 2px 9px; margin-bottom: 6px;
+      display: inline-flex; align-items: center;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+      color: #fff; background: #7c3aed;
+      border-radius: 20px; padding: 3px 10px;
     }
     .journal-today-date {
       font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px;
@@ -604,21 +604,14 @@
     }
     .journal-save-btn:disabled { opacity: 0.35; cursor: default; }
     .journal-save-btn:not(:disabled):active { opacity: 0.75; }
-    .journal-cancel-btn {
-      padding: 7px 14px; border-radius: 20px;
-      border: 1px solid var(--border); background: var(--bg); color: var(--text);
-      font-size: 13px; font-weight: 700;
-      cursor: pointer; font-family: inherit; transition: background 0.12s;
-    }
-    .journal-cancel-btn:active { background: var(--border); }
     .journal-past-hd {
       font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
       color: var(--subtext); margin-bottom: 10px; padding-left: 2px;
     }
     .journal-entry-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-left: 3px solid rgba(124,58,237,0.3);
+      background: #f0eeff;
+      border: 1px solid rgba(124,58,237,0.18);
+      border-left: 3px solid rgba(124,58,237,0.45);
       border-radius: 14px; padding: 14px;
       margin-bottom: 10px;
     }
@@ -626,23 +619,12 @@
       display: flex; align-items: center; margin-bottom: 8px;
     }
     .journal-entry-date-txt {
-      font-size: 12px; font-weight: 700; color: var(--subtext); flex: 1;
+      font-size: 12px; font-weight: 700; color: #9575cd; flex: 1;
     }
-    .journal-edit-btn {
-      font-size: 12px; font-weight: 600;
-      color: var(--primary); cursor: pointer;
-      padding: 2px 7px; border-radius: 6px;
-      transition: background 0.12s;
-    }
-    .journal-edit-btn:active { background: var(--pri-bg); }
     .journal-entry-txt {
-      font-size: 14px; color: var(--text);
+      font-size: 14px; color: #5b21b6;
       line-height: 1.75; white-space: pre-wrap; word-break: break-all;
     }
-    .journal-entry-edit-zone { display: none; }
-    .journal-entry-card.editing .journal-entry-txt  { display: none; }
-    .journal-entry-card.editing .journal-edit-btn   { display: none; }
-    .journal-entry-card.editing .journal-entry-edit-zone { display: block; }
     .journal-empty-msg {
       text-align: center; padding: 32px 0;
       font-size: 13px; color: var(--muted); line-height: 2;
@@ -747,7 +729,8 @@
     <div class="drawer-item" onclick="showToast('即將推出')">個人檔案</div>
     <div class="drawer-item" onclick="showToast('即將推出')">星獸收集</div>
     <div class="drawer-item" onclick="showToast('即將推出')">測驗對戰</div>
-    <div class="drawer-item sep"         onclick="closeMenu(); openJournal()">心情札記</div>
+    <div class="drawer-item"             onclick="closeMenu(); openJournal()">心情札記</div>
+    <div class="drawer-item sep"         onclick="closeMenu(); window.open('https://youtu.be/DX0Z5u-tDys','_blank')">前導故事</div>
     <div class="drawer-item blue sep"    onclick="closeMenu(); openInvite()">邀請好友</div>
     <div class="drawer-item green sep"   onclick="closeMenu(); openSwitchGroup()">切換群組</div>
     <div class="drawer-item danger"      onclick="closeMenu(); openLeaveConfirm()">退出群組</div>
@@ -819,7 +802,25 @@
     <div class="journal-hd">
       <div class="journal-handle"></div>
       <div class="journal-hd-row">
-        <span class="journal-hd-title">📓 心情札記</span>
+        <span class="journal-hd-title" style="display:flex;align-items:center;gap:8px;">
+          <svg width="18" height="21" viewBox="0 0 18 21" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <!-- 書背 -->
+            <rect x="0.5" y="1" width="14" height="19" rx="2.5" fill="#7c3aed" opacity="0.75"/>
+            <!-- 書脊 -->
+            <rect x="0.5" y="1" width="3.5" height="19" rx="2" fill="#5b21b6"/>
+            <!-- 書頁（白色） -->
+            <rect x="4" y="1" width="10.5" height="19" rx="2" fill="white" opacity="0.95"/>
+            <!-- 書頁邊緣陰影 -->
+            <rect x="13.5" y="2" width="0.8" height="17" rx="0.4" fill="#e5e3ec"/>
+            <!-- 文字行（淡紫） -->
+            <line x1="6" y1="7.5"  x2="12.5" y2="7.5"  stroke="#c4b5fd" stroke-width="1.3" stroke-linecap="round"/>
+            <line x1="6" y1="11"   x2="12.5" y2="11"   stroke="#c4b5fd" stroke-width="1.3" stroke-linecap="round"/>
+            <line x1="6" y1="14.5" x2="10"   y2="14.5" stroke="#c4b5fd" stroke-width="1.3" stroke-linecap="round"/>
+            <!-- 粉色書籤條 -->
+            <path d="M11.5 1 L14.5 1 L14.5 11 L13 9.5 L11.5 11 Z" fill="#f472b6" opacity="0.9"/>
+          </svg>
+          心情札記
+        </span>
         <button class="journal-close-btn" onclick="closeJournal()">
           <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
@@ -1485,8 +1486,10 @@
 
     let html = `
       <div class="journal-today-card">
-        <div class="journal-today-tag">今天</div>
-        <div class="journal-today-date">${_fmtDateCN(_jToday)}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="journal-today-date" style="margin-bottom:0">${_fmtDateCN(_jToday)}</div>
+          <div class="journal-today-tag">今天</div>
+        </div>
         <textarea class="journal-ta" id="jTodayTA" maxlength="100"
           placeholder="今天有什麼想說的嗎..." oninput="onJTodayInput(this)">${x(todayContent)}</textarea>
         <div class="journal-ta-footer">
@@ -1497,28 +1500,13 @@
 
     if (past.length > 0) {
       html += `<div class="journal-past-hd">過往記錄</div>`;
-      html += past.map((e, i) => {
-        const cl = e.content.length;
-        return `
-        <div class="journal-entry-card" id="jec-${i}" data-date="${x(e.date)}" data-orig="${x(e.content)}">
+      html += past.map(e => `
+        <div class="journal-entry-card">
           <div class="journal-entry-head">
             <span class="journal-entry-date-txt">${_fmtDateCN(e.date)}</span>
-            <span class="journal-edit-btn" onclick="startJEdit(${i})">編輯</span>
           </div>
           <div class="journal-entry-txt">${x(e.content)}</div>
-          <div class="journal-entry-edit-zone">
-            <textarea class="journal-ta" id="jeta-${i}" maxlength="100"
-              oninput="onJEntryInput(this,${i})">${x(e.content)}</textarea>
-            <div class="journal-ta-footer" style="margin-top:8px">
-              <span class="journal-char${_jCharCls(cl)}" id="jecc-${i}">${cl}/100</span>
-              <div style="display:flex;gap:8px">
-                <button class="journal-cancel-btn" onclick="cancelJEdit(${i})">取消</button>
-                <button class="journal-save-btn"   onclick="saveJEntry(${i})">儲存</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
+        </div>`).join('');
     } else if (!todayContent) {
       html += `<div class="journal-empty-msg">還沒有過往記錄 ✨<br>從今天開始寫下第一篇吧</div>`;
     }
@@ -1533,13 +1521,6 @@
     el.className = `journal-char${_jCharCls(n)}`;
     const btn = document.getElementById('jSaveBtn');
     if (btn) btn.disabled = ta.value.trim() === _jOrigContent;
-  }
-
-  function onJEntryInput(ta, i) {
-    const n = ta.value.length;
-    const el = document.getElementById(`jecc-${i}`);
-    el.textContent = `${n}/100`;
-    el.className = `journal-char${_jCharCls(n)}`;
   }
 
   async function saveJournalToday() {
@@ -1560,44 +1541,6 @@
       } else throw new Error();
     } catch {
       btn.textContent = '儲存'; btn.disabled = false;
-      showToast('儲存失敗，請重試');
-    }
-  }
-
-  function startJEdit(i) {
-    const card = document.getElementById(`jec-${i}`);
-    const orig = card.dataset.orig;
-    card.classList.add('editing');
-    const ta = document.getElementById(`jeta-${i}`);
-    ta.value = orig;
-    document.getElementById(`jecc-${i}`).textContent = `${orig.length}/100`;
-    setTimeout(() => ta.focus(), 50);
-  }
-
-  function cancelJEdit(i) {
-    const card = document.getElementById(`jec-${i}`);
-    document.getElementById(`jeta-${i}`).value = card.dataset.orig;
-    card.classList.remove('editing');
-  }
-
-  async function saveJEntry(i) {
-    const card    = document.getElementById(`jec-${i}`);
-    const date    = card.dataset.date;
-    const content = document.getElementById(`jeta-${i}`).value.trim();
-    if (!content) return;
-    try {
-      const r = await fetch(`${API}/journal-save`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid, date, content })
-      });
-      const d = await r.json();
-      if (d.success) {
-        card.querySelector('.journal-entry-txt').textContent = content;
-        card.dataset.orig = content;
-        card.classList.remove('editing');
-        showToast('已更新', 'ok');
-      } else throw new Error();
-    } catch {
       showToast('儲存失敗，請重試');
     }
   }
