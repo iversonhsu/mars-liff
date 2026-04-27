@@ -541,6 +541,14 @@
       padding: 0 20px 16px; flex-shrink: 0;
       border-bottom: 1px solid rgba(124,58,237,0.12);
     }
+    .journal-hd.grp {
+      background: linear-gradient(145deg, #fef9c3 0%, #fef3c7 100%);
+      border-bottom-color: rgba(217,119,6,0.15);
+    }
+    .journal-hd.grp .journal-handle { background: rgba(217,119,6,0.25); }
+    .journal-hd.grp .journal-hd-title { color: #92400e; }
+    .journal-hd.grp .journal-close-btn { background: rgba(217,119,6,0.1); color: #92400e; }
+    .journal-hd.grp .journal-close-btn:active { background: rgba(217,119,6,0.2); }
     .journal-handle {
       width: 36px; height: 4px;
       background: rgba(124,58,237,0.22);
@@ -640,30 +648,36 @@
 
     /* ── Journal: toggle switch ── */
     .j-toggle-row { display: flex; align-items: center; gap: 6px; }
-    .j-toggle-lbl { font-size: 12px; font-weight: 600; color: var(--subtext); }
+    .j-toggle-lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--subtext); }
     .j-toggle-track {
-      width: 38px; height: 22px; border-radius: 11px;
+      width: 34px; height: 20px; border-radius: 10px;
       background: #d1d5db; transition: background 0.2s;
       position: relative; cursor: pointer; flex-shrink: 0;
     }
     .j-toggle-track.on { background: #16a34a; }
     .j-toggle-thumb {
-      position: absolute; top: 3px; left: 3px;
-      width: 16px; height: 16px; border-radius: 50%;
+      position: absolute; top: 4px; left: 4px;
+      width: 12px; height: 12px; border-radius: 50%;
       background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
       transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
       pointer-events: none;
     }
-    .j-toggle-track.on .j-toggle-thumb { transform: translateX(16px); }
+    .j-toggle-track.on .j-toggle-thumb { transform: translateX(14px); }
 
     /* ── Journal: view switcher dropdown ── */
     .j-view-wrap { position: relative; }
     .j-view-btn {
-      display: flex; align-items: center; gap: 3px;
-      cursor: pointer; border-radius: 8px; padding: 2px 4px;
-      transition: background 0.12s;
+      display: flex; align-items: center;
+      cursor: pointer; padding: 2px 0;
     }
-    .j-view-btn:active { background: rgba(91,33,182,0.12); }
+    .j-chevron-wrap {
+      display: flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 6px;
+      transition: background 0.12s; flex-shrink: 0;
+      margin-left: 10px;
+    }
+    .j-view-btn:active .j-chevron-wrap { background: rgba(91,33,182,0.12); }
+    .journal-hd.grp .j-view-btn:active .j-chevron-wrap { background: rgba(217,119,6,0.15); }
     .j-chevron { transition: transform 0.18s; display: flex; align-items: center; }
     .j-chevron.open { transform: rotate(180deg); }
     .j-view-dd {
@@ -875,7 +889,7 @@
 <!-- Journal Overlay -->
 <div class="journal-overlay" id="journalOverlay" onclick="if(event.target===this)closeJournal()">
   <div class="journal-panel">
-    <div class="journal-hd">
+    <div class="journal-hd" id="journalHd">
       <div class="journal-handle"></div>
       <div class="journal-hd-row">
         <div class="journal-hd-title j-view-wrap">
@@ -892,9 +906,11 @@
               </svg>
               <span id="jViewTitle">心情札記</span>
             </span>
-            <svg class="j-chevron" id="jViewChevron" width="11" height="11" viewBox="0 0 14 14" fill="currentColor">
-              <path d="M7 9.5L1.5 4h11L7 9.5z"/>
-            </svg>
+            <div class="j-chevron-wrap">
+              <svg class="j-chevron" id="jViewChevron" width="11" height="11" viewBox="0 0 14 14" fill="currentColor">
+                <path d="M7 9.5L1.5 4h11L7 9.5z"/>
+              </svg>
+            </div>
           </div>
           <div class="j-view-dd" id="jViewDd">
             <div class="j-view-opt cur" id="jOpt0" onclick="switchJView('personal')"><span class="j-view-check">✓</span>心情札記</div>
@@ -1534,6 +1550,7 @@
     document.getElementById('jViewDd').classList.remove('open');
     document.getElementById('jViewChevron').classList.remove('open');
     document.getElementById('journalBody').classList.remove('grp');
+    document.getElementById('journalHd').classList.remove('grp');
     document.getElementById('journalOverlay').classList.add('open');
     loadJournal();
   }
@@ -1686,6 +1703,7 @@
     opt1.classList.toggle('cur', !isPersonal);
     opt1.querySelector('.j-view-check').textContent = !isPersonal ? '✓' : '';
     document.getElementById('journalBody').classList.toggle('grp', !isPersonal);
+    document.getElementById('journalHd').classList.toggle('grp', !isPersonal);
     if (isPersonal) { loadJournal(); } else { loadGroupJournal(); }
   }
 
