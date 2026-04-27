@@ -1497,16 +1497,22 @@
     const clen = todayContent.length;
 
     let html = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="journal-past-hd" style="margin-bottom:0">今日記錄</div>
+        <div id="jTodayToggle" onclick="toggleTodayCard()" style="font-size:12px;color:var(--primary);cursor:pointer;font-weight:600;padding:2px 0;">收起</div>
+      </div>
       <div class="journal-today-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div class="journal-today-date" style="margin-bottom:0">${_fmtDateCN(_jToday)}</div>
           <div class="journal-today-tag">今天</div>
         </div>
-        <textarea class="journal-ta" id="jTodayTA" maxlength="100"
-          placeholder="今天有什麼想說的嗎..." oninput="onJTodayInput(this)">${x(todayContent)}</textarea>
-        <div class="journal-ta-footer">
-          <span class="journal-char${_jCharCls(clen)}" id="jCharCount">${clen}/100</span>
-          <button class="journal-save-btn" id="jSaveBtn" onclick="saveJournalToday()" disabled>儲存</button>
+        <div id="jTodayBody">
+          <textarea class="journal-ta" id="jTodayTA" maxlength="100"
+            placeholder="今天有什麼想說的嗎..." oninput="onJTodayInput(this)">${x(todayContent)}</textarea>
+          <div class="journal-ta-footer">
+            <span class="journal-char${_jCharCls(clen)}" id="jCharCount">${clen}/100</span>
+            <button class="journal-save-btn" id="jSaveBtn" onclick="saveJournalToday()" disabled>儲存</button>
+          </div>
         </div>
       </div>`;
 
@@ -1550,6 +1556,14 @@
     listEl.innerHTML = '';
     _jShownCount = 0;
     _appendJEntries();
+  }
+
+  function toggleTodayCard() {
+    const body   = document.getElementById('jTodayBody');
+    const toggle = document.getElementById('jTodayToggle');
+    const hidden = body.style.display === 'none';
+    body.style.display = hidden ? '' : 'none';
+    toggle.textContent = hidden ? '收起' : '展示';
   }
 
   function onJTodayInput(ta) {
