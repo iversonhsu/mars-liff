@@ -421,19 +421,26 @@
       if (!liff.isLoggedIn()) { liff.login(); return; }
       const p = await liff.getProfile();
       uid = p.userId;
+      // 解析 URL params（相容 liff.state 包裝）
+      const _up  = new URLSearchParams(location.search);
+      const _ls  = _up.get('liff.state');
+      const _lsp = _ls ? (() => { try { return new URLSearchParams(decodeURIComponent(_ls).replace(/^\?/,'')); } catch { return new URLSearchParams(); } })() : new URLSearchParams();
+      const _gp  = k => _up.get(k) || _lsp.get(k) || '';
+      // 對戰邀請連結：直接跳轉到 quiz_battle.html
+      const _bid = _gp('battle_id');
+      if (_bid) {
+        const bp = new URLSearchParams({ battle_id: _bid, uid, group_id: _gp('group_id'), group_name: _gp('group_name') || '星際群組' });
+        location.replace(`quiz_battle.html?${bp}`);
+        return;
+      }
       loadCardColors();
       document.getElementById('userName').textContent = p.displayName;
       document.getElementById('userSub').textContent  = '已連線';
       if (p.pictureUrl)
         document.getElementById('userAvatar').innerHTML = `<img src="${p.pictureUrl}" alt="">`;
       loadGroups();
-      // 偵測邀請連結，直接自動加入（相容 liff.state 包裝）
-      const _up = new URLSearchParams(location.search);
-      let urlCode = _up.get('invite_code');
-      if (!urlCode) {
-        const ls = _up.get('liff.state');
-        if (ls) { try { urlCode = new URLSearchParams(decodeURIComponent(ls).replace(/^\?/,'')).get('invite_code') || ''; } catch {} }
-      }
+      // 偵測群組邀請連結，直接自動加入
+      const urlCode = _gp('invite_code');
       if (urlCode) autoJoinFromInvite(urlCode.toUpperCase());
     } catch {
       uid = 'demo_user';
