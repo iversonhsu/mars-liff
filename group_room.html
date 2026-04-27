@@ -622,9 +622,17 @@
       font-size: 12px; font-weight: 700; color: #9575cd; flex: 1;
     }
     .journal-entry-txt {
-      font-size: 14px; color: #5b21b6;
+      font-size: 14px; color: var(--text);
       line-height: 1.75; white-space: pre-wrap; word-break: break-all;
     }
+    .journal-load-more {
+      text-align: center; padding: 12px 0;
+      font-size: 13px; font-weight: 600; color: var(--primary);
+      cursor: pointer; border-top: 1px solid rgba(124,58,237,0.12);
+      margin-top: 4px; transition: background 0.12s; border-radius: 0 0 10px 10px;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .journal-load-more:active { background: rgba(124,58,237,0.06); }
     .journal-empty-msg {
       text-align: center; padding: 32px 0;
       font-size: 13px; color: var(--muted); line-height: 2;
@@ -1436,6 +1444,9 @@
   /* ── Journal ─────────────────────────────────────────────────── */
   let _jToday = '';
   let _jOrigContent = '';
+  let _jPastEntries = [];
+  let _jShownCount  = 0;
+  const J_PAGE = 5;
 
   function openJournal() {
     if (!uid || uid === 'demo_user') { showToast('示範模式無法使用心情札記'); return; }
@@ -1452,7 +1463,8 @@
   function _fmtDateCN(d) {
     const [y, m, day] = d.split('-').map(Number);
     const dow = ['日','一','二','三','四','五','六'][new Date(y, m - 1, day).getDay()];
-    return `${m}月${day}日  週${dow}`;
+    const yearPfx = y !== new Date().getFullYear() ? `${y}年` : '';
+    return `${yearPfx}${m}月${day}日  週${dow}`;
   }
   function _jCharCls(n) {
     return n >= 95 ? ' red' : n >= 80 ? ' amber' : '';
@@ -1479,8 +1491,9 @@
     entries.sort((a, b) => b.date.localeCompare(a.date));
     const todayEntry   = entries.find(e => e.date === _jToday);
     const todayContent = todayEntry?.content || '';
-    _jOrigContent = todayContent;
-    const past = entries.filter(e => e.date !== _jToday);
+    _jOrigContent  = todayContent;
+    _jPastEntries  = entries.filter(e => e.date !== _jToday);
+    _jShownCount   = 0;
     const clen = todayContent.length;
 
     let html = `
@@ -1497,20 +1510,35 @@
         </div>
       </div>`;
 
-    if (past.length > 0) {
-      html += `<div class="journal-past-hd">過往記錄</div>`;
-      html += past.map(e => `
-        <div class="journal-entry-card">
-          <div class="journal-entry-head">
-            <span class="journal-entry-date-txt">${_fmtDateCN(e.date)}</span>
-          </div>
-          <div class="journal-entry-txt">${x(e.content)}</div>
-        </div>`).join('');
+    if (_jPastEntries.length > 0) {
+      html += `<div class="journal-past-hd">過往記錄</div><div id="jPastList"></div><div id="jLoadMoreWrap"></div>`;
     } else if (!todayContent) {
       html += `<div class="journal-empty-msg">還沒有過往記錄 ✨<br>從今天開始寫下第一篇吧</div>`;
     }
 
     document.getElementById('journalBody').innerHTML = html;
+    if (_jPastEntries.length > 0) _appendJEntries();
+  }
+
+  function _entryCardHtml(e) {
+    return `
+      <div class="journal-entry-card">
+        <div class="journal-entry-head">
+          <span class="journal-entry-date-txt">${_fmtDateCN(e.date)}</span>
+        </div>
+        <div class="journal-entry-txt">${x(e.content)}</div>
+      </div>`;
+  }
+
+  function _appendJEntries() {
+    const listEl = document.getElementById('jPastList');
+    const wrapEl = document.getElementById('jLoadMoreWrap');
+    const next = _jPastEntries.slice(_jShownCount, _jShownCount + J_PAGE);
+    listEl.insertAdjacentHTML('beforeend', next.map(_entryCardHtml).join(''));
+    _jShownCount += next.length;
+    wrapEl.innerHTML = _jShownCount < _jPastEntries.length
+      ? `<div class="journal-load-more" onclick="_appendJEntries()">查看更多<svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" style="margin-top:1px"><path d="M7 9.5L1.5 4h11L7 9.5z"/></svg></div>`
+      : '';
   }
 
   function onJTodayInput(ta) {
