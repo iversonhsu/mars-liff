@@ -1853,7 +1853,7 @@
       // Send battle invite via shareTargetPicker
       const ready = await ensureLiff();
       if (ready && liff.isInClient()) {
-        const battleUrl = `https://iversonhsu.github.io/mars-liff/quiz_battle.html?battle_id=${encodeURIComponent(d.battle_id)}&group_id=${encodeURIComponent(group_id)}&group_name=${encodeURIComponent(group_name)}`;
+        const battleUrl = `https://liff.line.me/2009047186-MXDITyXh?battle_id=${encodeURIComponent(d.battle_id)}&group_id=${encodeURIComponent(group_id)}&group_name=${encodeURIComponent(group_name)}`;
         const inviterName = myNickname || '隊友';
         try {
           await liff.shareTargetPicker([{
