@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>測驗對戰</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root {
+      --bg:      #0d0c1d;
+      --card:    #1a1830;
+      --card2:   #221f3a;
+      --border:  #2d2b4e;
+      --text:    #f0eeff;
+      --sub:     #8b87c0;
+      --muted:   #5c597a;
+      --primary: #7c3aed;
+      --pri-l:   #a78bfa;
+      --gold:    #f59e0b;
+      --green:   #10b981;
+      --red:     #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans TC', -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ── Stars ── */
+    .stars {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(1.5px 1.5px at 15% 25%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 55% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 80% 35%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(2px   2px   at 35% 75%, rgba(167,139,250,0.7) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 70% 65%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 90% 85%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 25% 55%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 60% 90%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(2px   2px   at  5% 45%, rgba(167,139,250,0.5) 0%, transparent 100%);
+    }
+
+    /* ── Screens ── */
+    .screen { display: none; position: relative; z-index: 1; min-height: 100vh; padding: 20px 16px 44px; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* ── Loading ── */
+    #screenLoading {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; min-height: 100vh; gap: 14px;
+    }
+    .spinner { width: 34px; height: 34px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error ── */
+    #screenError { display: none; position: relative; z-index: 1; min-height: 100vh; }
+    .err-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 12px; padding: 24px; text-align: center; }
+    .err-icon { font-size: 52px; }
+    .err-msg  { font-size: 15px; color: var(--sub); line-height: 1.7; }
+
+    /* ── Common ── */
+    .screen-hd { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .back-btn  { width: 36px; height: 36px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; flex-shrink: 0; padding-right: 2px; transition: background 0.12s; }
+    .back-btn:active { background: var(--border); }
+    .screen-title { font-size: 17px; font-weight: 700; flex: 1; }
+    .sec-label { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; color: var(--muted); margin-bottom: 10px; }
+
+    .btn { width: 100%; padding: 15px; border-radius: 13px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.15s, transform 0.1s; margin-bottom: 10px; }
+    .btn:active:not(:disabled) { transform: scale(0.98); opacity: 0.82; }
+    .btn:disabled { opacity: 0.35; cursor: default; }
+    .btn-primary   { background: var(--primary); color: #fff; }
+    .btn-success   { background: var(--green); color: #fff; }
+    .btn-outline   { background: transparent; color: var(--pri-l); border: 1.5px solid var(--primary); }
+    .btn-secondary { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
+
+    /* ── Player card (shared) ── */
+    .player-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .player-card.is-self { border-color: var(--primary); background: rgba(124,58,237,0.1); }
+    .p-avatar  { width: 40px; height: 40px; border-radius: 9px; background: var(--card2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; flex-shrink: 0; }
+    .p-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .p-name    { font-size: 14px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .host-tag  { font-size: 10px; font-weight: 700; color: var(--gold); background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 2px 7px; border-radius: 20px; flex-shrink: 0; }
+    .s-badge   { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
+    .s-waiting { background: rgba(107,114,128,0.2); color: #9ca3af; }
+    .s-ready   { background: rgba(16,185,129,0.2); color: #34d399; }
+
+    /* ── Lobby ── */
+    .lobby-meta { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 18px; display: flex; justify-content: space-between; }
+    .lobby-meta-item .lm-label { font-size: 11px; color: var(--sub); margin-bottom: 3px; }
+    .lobby-meta-item .lm-val   { font-size: 17px; font-weight: 700; }
+    .lobby-hint { font-size: 13px; color: var(--sub); text-align: center; margin: 16px 0; line-height: 1.6; }
+    .lobby-btn-area { margin-top: auto; padding-top: 16px; }
+
+    /* ── Countdown ── */
+    #screenCountdown { align-items: center; justify-content: center; background: radial-gradient(ellipse at center, #1a0a3d 0%, var(--bg) 70%); }
+    .cd-label { font-size: 13px; letter-spacing: 0.15em; color: var(--sub); margin-bottom: 28px; }
+    .cd-num   { font-size: 120px; font-weight: 700; line-height: 1; color: var(--pri-l); text-shadow: 0 0 40px rgba(124,58,237,0.8), 0 0 80px rgba(124,58,237,0.4); animation: pulse-in 0.85s ease-out; }
+    @keyframes pulse-in { 0% { transform: scale(1.4); opacity: 0.4; } 60% { transform: scale(0.92); } 100% { transform: scale(1); opacity: 1; } }
+    .cd-sub   { margin-top: 28px; font-size: 14px; color: var(--sub); letter-spacing: 0.05em; }
+
+    /* ── Question ── */
+    .q-hd       { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .q-idx      { font-size: 13px; font-weight: 700; color: var(--sub); }
+    .q-timer-wrap { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+    .q-timer-wrap svg { transform: rotate(-90deg); display: block; }
+    .q-timer-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: var(--pri-l); }
+    .q-timer-num.urgent { color: var(--red); }
+    .q-text  { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; font-size: 16px; font-weight: 600; line-height: 1.6; margin-bottom: 18px; text-align: center; min-height: 88px; display: flex; align-items: center; justify-content: center; }
+    .q-opts  { display: flex; flex-direction: column; gap: 10px; }
+    .q-opt   { padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.14s; font-size: 14px; font-weight: 500; }
+    .q-opt:active { transform: scale(0.99); }
+    .q-opt.selected { border-color: var(--primary); background: rgba(124,58,237,0.15); }
+    .q-opt.selected .q-opt-k { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .q-opt.disabled { cursor: default; opacity: 0.55; }
+    .q-opt-k { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--pri-l); flex-shrink: 0; }
+    .q-strip { margin-top: 16px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .q-pip   { display: flex; align-items: center; gap: 5px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px 4px 5px; font-size: 12px; font-weight: 600; }
+    .q-pip-av { width: 20px; height: 20px; border-radius: 5px; background: var(--card2); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .q-pip-av img { width: 100%; height: 100%; object-fit: cover; }
+    .q-pip.done { border-color: var(--green); background: rgba(16,185,129,0.1); }
+
+    /* ── Reveal ── */
+    .rv-q    { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; font-size: 15px; font-weight: 600; line-height: 1.6; text-align: center; margin-bottom: 14px; }
+    .rv-opts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .rv-opt  { padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--card); display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; }
+    .rv-opt.correct { border-color: var(--green); background: rgba(16,185,129,0.12); }
+    .rv-opt.wrong   { opacity: 0.45; }
+    .rv-opt-k { width: 24px; height: 24px; border-radius: 6px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .rv-opt.correct .rv-opt-k { background: var(--green); color: #fff; border-color: var(--green); }
+    .rv-player { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; }
+    .rv-player.is-self { border-color: var(--primary); }
+    .rv-av   { width: 32px; height: 32px; border-radius: 8px; background: var(--card2); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .rv-av img { width: 100%; height: 100%; object-fit: cover; }
+    .rv-name { font-size: 13px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rv-ans  { font-size: 12px; font-weight: 700; color: var(--sub); flex-shrink: 0; margin-right: 4px; }
+    .rv-icon { font-size: 16px; flex-shrink: 0; }
+    .rv-score{ font-size: 12px; font-weight: 700; color: var(--gold); flex-shrink: 0; margin-left: 4px; }
+    .rv-next { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; font-size: 14px; color: var(--sub); margin-top: 4px; }
+    .rv-next-n { font-size: 20px; font-weight: 700; color: var(--pri-l); min-width: 28px; text-align: center; }
+
+    /* ── Final ── */
+    .final-title { text-align: center; font-size: 30px; font-weight: 700; margin-bottom: 6px; background: linear-gradient(135deg, #a78bfa, #f0abfc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .final-sub   { text-align: center; font-size: 13px; color: var(--sub); margin-bottom: 24px; }
+    .podium { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+    .rk-row  { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--border); }
+    .rk-row:last-child { border-bottom: none; }
+    .rk-row.gold   { background: rgba(245,158,11,0.08); }
+    .rk-row.silver { background: rgba(167,139,250,0.07); }
+    .rk-row.bronze { background: rgba(252,165,165,0.05); }
+    .rk-row.self   { border-left: 3px solid var(--primary); }
+    .rk-medal { font-size: 22px; width: 28px; text-align: center; flex-shrink: 0; }
+    .rk-av   { width: 38px; height: 38px; border-radius: 9px; background: var(--card2); border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .rk-av img { width: 100%; height: 100%; object-fit: cover; }
+    .rk-name { font-size: 14px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rk-pts  { font-size: 22px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+    .rk-unit { font-size: 11px; color: var(--sub); margin-left: 2px; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--card2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 18px; font-size: 13px; white-space: nowrap; opacity: 0; transition: all 0.22s; z-index: 1000; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.ok   { background: #064e3b; border-color: var(--green); }
+  </style>
+</head>
+<body>
+
+<div class="stars"></div>
+
+<!-- Loading -->
+<div id="screenLoading">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--sub)">載入對戰房間...</div>
+</div>
+
+<!-- Error -->
+<div id="screenError">
+  <div class="err-wrap">
+    <div class="err-icon">⚠️</div>
+    <div class="err-msg" id="errMsg">發生錯誤，請重試</div>
+    <button class="btn btn-secondary" style="max-width:200px;margin-top:8px" onclick="location.reload()">重新載入</button>
+    <button class="btn btn-outline" style="max-width:200px" onclick="goBack()">返回群組</button>
+  </div>
+</div>
+
+<!-- Lobby -->
+<div id="screenLobby" class="screen">
+  <div class="screen-hd">
+    <div class="back-btn" onclick="goBack()">←</div>
+    <div class="screen-title">測驗對戰</div>
+    <span style="font-size:11px;font-weight:700;color:var(--sub);background:rgba(124,58,237,0.15);padding:4px 10px;border-radius:20px">等待中</span>
+  </div>
+
+  <div class="lobby-meta">
+    <div class="lobby-meta-item">
+      <div class="lm-label">群組</div>
+      <div class="lm-val" id="lobbyGroup">---</div>
+    </div>
+    <div class="lobby-meta-item" style="text-align:right">
+      <div class="lm-label">題目數</div>
+      <div class="lm-val" id="lobbyMaxQ">---</div>
+    </div>
+  </div>
+
+  <div class="sec-label">玩家列表</div>
+  <div id="lobbyPlayers"></div>
+  <div class="lobby-hint" id="lobbyHint">等待其他玩家加入...</div>
+
+  <div class="lobby-btn-area">
+    <button class="btn btn-success" id="btnReady" onclick="doReady()">✓ 我準備好了</button>
+    <button class="btn btn-primary" id="btnStart" onclick="doStart()" style="display:none">⚔️ 開始對戰</button>
+  </div>
+</div>
+
+<!-- Countdown -->
+<div id="screenCountdown" class="screen">
+  <div class="cd-label">準備迎接挑戰！</div>
+  <div class="cd-num" id="cdNum">3</div>
+  <div class="cd-sub">題目即將出現...</div>
+</div>
+
+<!-- Question -->
+<div id="screenQuestion" class="screen">
+  <div class="q-hd">
+    <div class="q-idx" id="qIdx">第 1 / 5 題</div>
+    <div class="q-timer-wrap">
+      <svg width="60" height="60" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="var(--border)" stroke-width="8"/>
+        <circle id="timerRing" cx="50" cy="50" r="44" fill="none" stroke="var(--primary)" stroke-width="8"
+          stroke-dasharray="276.46" stroke-dashoffset="0"
+          style="transition:stroke-dashoffset 0.5s linear;stroke-linecap:round"/>
+      </svg>
+      <div class="q-timer-num" id="timerNum">10</div>
+    </div>
+  </div>
+  <div class="q-text" id="qText">載入題目...</div>
+  <div class="q-opts" id="qOpts"></div>
+  <div class="q-strip" id="qStrip"></div>
+</div>
+
+<!-- Reveal -->
+<div id="screenReveal" class="screen">
+  <div class="screen-hd">
+    <div class="screen-title" id="rvTitle">第 1 題 解答</div>
+  </div>
+  <div class="rv-q" id="rvQ"></div>
+  <div class="rv-opts" id="rvOpts"></div>
+  <div class="sec-label">所有人的回答</div>
+  <div id="rvPlayers"></div>
+  <div class="rv-next">
+    <span id="rvNextLabel">下一題</span>
+    <span class="rv-next-n" id="rvNextNum">3</span>
+    <span>秒後開始</span>
+  </div>
+</div>
+
+<!-- Final -->
+<div id="screenFinal" class="screen">
+  <div class="final-title">🏆 對戰結束</div>
+  <div class="final-sub" id="finalSub">精彩一戰！</div>
+  <div class="podium" id="finalRanking"></div>
+  <div>
+    <button class="btn btn-primary" onclick="goBack()">返回群組</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API     = 'https://webbermars.app.n8n.cloud/webhook';
+const LIFF_ID = '2009047186-MXDITyXh';
+const CIRC    = 276.46; // 2π × 44
+
+let uid        = '';
+let battle_id  = '';
+let group_id   = '';
+let group_name = '';
+let invite_code = '';
+
+let _poll         = null;
+let _lastStatus   = '';
+let _qLastIdx     = -1;
+let _rvLastIdx    = -1;
+let _myAnswer     = null;
+let _myReady      = false;
+let _advPending   = false;
+let _lastCdNum    = -1;
+
+/* ── Helpers ── */
+function gp(k) {
+  const s = new URLSearchParams(location.search);
+  const v = s.get(k);
+  if (v) return v;
+  const ls = s.get('liff.state');
+  if (ls) { try { return new URLSearchParams(decodeURIComponent(ls).replace(/^\?/,'')).get(k) || ''; } catch {} }
+  return '';
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => { t.className = 'toast'; }, 2300);
+}
+
+function showScreen(id) {
+  document.getElementById('screenLoading').style.display = 'none';
+  ['screenLobby','screenCountdown','screenQuestion','screenReveal','screenFinal'].forEach(s => {
+    document.getElementById(s).classList.remove('active');
+  });
+  document.getElementById('screenError').style.display = 'none';
+  if (id === 'screenError') {
+    document.getElementById('screenError').style.display = 'block';
+  } else {
+    document.getElementById(id).classList.add('active');
+  }
+}
+
+function showError(msg) {
+  stopPoll();
+  document.getElementById('errMsg').textContent = msg;
+  showScreen('screenError');
+}
+
+function goBack() {
+  stopPoll();
+  const p = new URLSearchParams({ group_id, group_name, uid });
+  if (invite_code) p.set('invite_code', invite_code);
+  location.href = `group_room.html?${p}`;
+}
+
+/* ── Init ── */
+async function init() {
+  battle_id   = gp('battle_id');
+  group_id    = gp('group_id');
+  group_name  = gp('group_name') || '星際群組';
+  uid         = gp('uid');
+  invite_code = gp('invite_code');
+
+  try { await liff.init({ liffId: LIFF_ID }); } catch {}
+
+  if (!uid) {
+    try {
+      if (liff.isInClient()) {
+        const p = await liff.getProfile();
+        uid = p.userId;
+      }
+    } catch {}
+  }
+  if (!uid) uid = 'demo_user';
+
+  if (!battle_id) { showError('找不到對戰房間，請重新點擊邀請連結'); return; }
+
+  document.getElementById('lobbyGroup').textContent = group_name;
+
+  // Try to join (safe if already member or battle not in waiting)
+  if (uid !== 'demo_user') {
+    try {
+      await fetch(`${API}/battle-join`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, battle_id })
+      });
+    } catch {}
+  }
+
+  startPoll();
+}
+
+/* ── Polling ── */
+function startPoll() { poll(); _poll = setInterval(poll, 1000); }
+function stopPoll()  { if (_poll) { clearInterval(_poll); _poll = null; } }
+
+async function poll() {
+  try {
+    const r = await fetch(`${API}/battle-state`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, battle_id })
+    });
+    const s = await r.json();
+    if (s && !s.error) renderState(s);
+  } catch {}
+}
+
+async function advance() {
+  if (_advPending) return;
+  _advPending = true;
+  try {
+    await fetch(`${API}/battle-advance`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, battle_id })
+    });
+  } catch {}
+  setTimeout(() => { _advPending = false; }, 1800);
+}
+
+/* ── State router ── */
+function renderState(s) {
+  const { status, players = [], question, current_answers = [],
+          max_questions, current_index, question_started_at, host_uid } = s;
+
+  const elapsed = question_started_at
+    ? (Date.now() - new Date(question_started_at).getTime()) / 1000
+    : 0;
+  const idx = parseInt(current_index) || 0;
+
+  switch (status) {
+
+    case 'waiting':
+      if (_lastStatus !== 'waiting') showScreen('screenLobby');
+      renderLobby(s);
+      break;
+
+    case 'countdown': {
+      if (_lastStatus !== 'countdown') { showScreen('screenCountdown'); _lastCdNum = -1; }
+      const rem  = Math.max(0, 3 - elapsed);
+      const num  = Math.max(1, Math.ceil(rem));
+      if (num !== _lastCdNum) {
+        _lastCdNum = num;
+        const el = document.getElementById('cdNum');
+        el.textContent = num;
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = 'pulse-in 0.85s ease-out';
+      }
+      if (elapsed > 3.3) advance();
+      break;
+    }
+
+    case 'question': {
+      const changed = _lastStatus !== 'question' || idx !== _qLastIdx;
+      if (changed) {
+        showScreen('screenQuestion');
+        _myAnswer  = null;
+        _qLastIdx  = idx;
+        renderQuestion(s);
+      }
+      updateTimer(Math.max(0, 10 - elapsed));
+      renderStrip(players, current_answers);
+      if (elapsed > 10.5) advance();
+      break;
+    }
+
+    case 'reveal': {
+      const changed = _lastStatus !== 'reveal' || idx !== _rvLastIdx;
+      if (changed) {
+        showScreen('screenReveal');
+        _rvLastIdx = idx;
+        renderReveal(s);
+      }
+      const rem = Math.max(0, 3 - elapsed);
+      const numEl = document.getElementById('rvNextNum');
+      if (numEl) numEl.textContent = Math.max(1, Math.ceil(rem));
+      // Last question: change label
+      const isLast = idx >= parseInt(max_questions) - 1;
+      const lbl = document.getElementById('rvNextLabel');
+      if (lbl) lbl.textContent = isLast ? '對戰結束' : '下一題';
+      if (elapsed > 3.3) advance();
+      break;
+    }
+
+    case 'finished':
+      if (_lastStatus !== 'finished') {
+        stopPoll();
+        renderFinal(s);
+        showScreen('screenFinal');
+      }
+      break;
+  }
+
+  _lastStatus = status;
+}
+
+/* ── Lobby ── */
+function renderLobby({ players = [], host_uid, max_questions }) {
+  document.getElementById('lobbyMaxQ').textContent = `${max_questions} 題`;
+
+  const me = players.find(p => p.uid === uid);
+  _myReady = me?.status === 'ready';
+
+  document.getElementById('lobbyPlayers').innerHTML = players.map(p => {
+    const isSelf  = p.uid === uid;
+    const isHost  = p.uid === host_uid;
+    const isReady = p.status === 'ready';
+    const av = p.avatar
+      ? `<img src="${esc(p.avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
+      : '🌟';
+    return `<div class="player-card${isSelf ? ' is-self' : ''}">
+      <div class="p-avatar">${av}</div>
+      <span class="p-name">${esc(p.nickname || uid.slice(-6))}</span>
+      ${isHost ? '<span class="host-tag">房主</span>' : ''}
+      <span class="s-badge ${isReady ? 's-ready' : 's-waiting'}">${isReady ? '✓ 準備' : '等待中'}</span>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:13px;padding:8px 0">等待玩家加入...</div>';
+
+  const allReady  = players.length >= 2 && players.every(p => p.status === 'ready');
+  const isHost    = uid === host_uid;
+  const readyCnt  = players.filter(p => p.status === 'ready').length;
+
+  const btnReady = document.getElementById('btnReady');
+  if (_myReady) {
+    btnReady.textContent = '✓ 已準備好';
+    btnReady.className   = 'btn btn-outline';
+    btnReady.disabled    = true;
+  } else {
+    btnReady.textContent = '✓ 我準備好了';
+    btnReady.className   = 'btn btn-success';
+    btnReady.disabled    = false;
+  }
+
+  const btnStart = document.getElementById('btnStart');
+  if (isHost) {
+    btnStart.style.display = 'block';
+    btnStart.disabled      = !allReady;
+    btnStart.textContent   = allReady ? '⚔️ 開始對戰' : `等待全員準備 (${readyCnt}/${players.length})`;
+  } else {
+    btnStart.style.display = 'none';
+  }
+
+  document.getElementById('lobbyHint').textContent = allReady
+    ? (isHost ? '所有人已準備！快開始吧 ⚔️' : '等待房主開始對戰...')
+    : `已加入 ${players.length} 人，${readyCnt} 人準備完成`;
+}
+
+/* ── Question render ── */
+function renderQuestion({ question, current_index, max_questions }) {
+  if (!question) return;
+  const n = parseInt(current_index) + 1;
+  document.getElementById('qIdx').textContent  = `第 ${n} / ${max_questions} 題`;
+  document.getElementById('qText').textContent = question.text;
+
+  document.getElementById('qOpts').innerHTML = ['A','B','C'].map(k => {
+    const txt = question.options?.[k];
+    if (!txt) return '';
+    return `<div class="q-opt" id="qo-${k}" onclick="selectAnswer('${k}')">
+      <div class="q-opt-k">${k}</div>
+      <span>${esc(txt)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderStrip(players, current_answers) {
+  const answered = new Set((current_answers || []).map(a => a.uid));
+  const el = document.getElementById('qStrip');
+  if (!el) return;
+  el.innerHTML = (players || []).map(p => {
+    const done = answered.has(p.uid);
+    const av = p.avatar
+      ? `<img src="${esc(p.avatar)}" alt="" onerror="this.parentElement.textContent='⭐'">`
+      : '⭐';
+    return `<div class="q-pip${done ? ' done' : ''}">
+      <div class="q-pip-av">${av}</div>
+      <span>${esc(p.nickname?.slice(0,4) || p.uid.slice(-4))}</span>
+      ${done ? ' ✓' : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ── Timer ring ── */
+function updateTimer(remaining) {
+  const n  = Math.ceil(remaining);
+  const ne = document.getElementById('timerNum');
+  const re = document.getElementById('timerRing');
+  if (!ne || !re) return;
+  ne.textContent = n;
+  ne.className   = `q-timer-num${n <= 3 ? ' urgent' : ''}`;
+  re.style.strokeDashoffset = CIRC * (1 - remaining / 10);
+  re.style.stroke = n <= 3 ? 'var(--red)' : 'var(--primary)';
+}
+
+/* ── Answer ── */
+async function selectAnswer(key) {
+  if (_myAnswer) return;
+  _myAnswer = key;
+  document.querySelectorAll('.q-opt').forEach(el => {
+    el.classList.add('disabled');
+    if (el.id === `qo-${key}`) el.classList.add('selected');
+  });
+  if (uid === 'demo_user') return;
+  try {
+    await fetch(`${API}/battle-answer`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, battle_id, answer: key })
+    });
+  } catch { toast('提交失敗'); }
+}
+
+/* ── Reveal render ── */
+function renderReveal({ question, current_answers = [], players = [], current_index, max_questions }) {
+  if (!question) return;
+  const n = parseInt(current_index) + 1;
+  document.getElementById('rvTitle').textContent = `第 ${n} / ${max_questions} 題 解答`;
+  document.getElementById('rvQ').textContent     = question.text;
+
+  const correct = question.correct_answer;
+  document.getElementById('rvOpts').innerHTML = ['A','B','C'].map(k => {
+    const txt = question.options?.[k];
+    if (!txt) return '';
+    const isOk = k === correct;
+    return `<div class="rv-opt${isOk ? ' correct' : ' wrong'}">
+      <div class="rv-opt-k">${k}</div>
+      <span style="flex:1">${esc(txt)}</span>
+      ${isOk ? '<span style="font-size:16px">✓</span>' : ''}
+    </div>`;
+  }).join('');
+
+  const ansMap = {};
+  current_answers.forEach(a => { ansMap[a.uid] = a; });
+
+  document.getElementById('rvPlayers').innerHTML = players.map(p => {
+    const a     = ansMap[p.uid];
+    const isSelf = p.uid === uid;
+    const isOk  = a && (a.is_correct === true || a.is_correct === 'true' || a.is_correct === 1 || a.is_correct === '1');
+    const icon  = !a ? '—' : isOk ? '✅' : '❌';
+    const av    = p.avatar
+      ? `<img src="${esc(p.avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
+      : '🌟';
+    return `<div class="rv-player${isSelf ? ' is-self' : ''}">
+      <div class="rv-av">${av}</div>
+      <span class="rv-name">${esc(p.nickname || p.uid.slice(-6))}</span>
+      <span class="rv-ans">${a ? a.answer : '未作答'}</span>
+      <span class="rv-icon">${icon}</span>
+      <span class="rv-score">${p.score ?? 0}分</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── Final render ── */
+function renderFinal({ players = [], max_questions }) {
+  const sorted = [...players].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  const medals  = ['🥇','🥈','🥉'];
+  const rowCls  = ['gold','silver','bronze'];
+  document.getElementById('finalSub').textContent = `${max_questions} 題對戰完成，精彩一戰！`;
+  document.getElementById('finalRanking').innerHTML = sorted.map((p, i) => {
+    const isSelf = p.uid === uid;
+    const av = p.avatar
+      ? `<img src="${esc(p.avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
+      : '🌟';
+    const cls = (i < 3 ? rowCls[i] : '') + (isSelf ? ' self' : '');
+    const medal = i < 3 ? medals[i] : `#${i + 1}`;
+    return `<div class="rk-row ${cls}">
+      <div class="rk-medal">${medal}</div>
+      <div class="rk-av">${av}</div>
+      <div class="rk-name">${esc(p.nickname || p.uid.slice(-6))}</div>
+      <div class="rk-pts">${p.score ?? 0}<span class="rk-unit">分</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Ready / Start ── */
+async function doReady() {
+  if (uid === 'demo_user') { toast('示範模式'); return; }
+  const btn = document.getElementById('btnReady');
+  btn.disabled = true; btn.textContent = '提交中...';
+  try {
+    await fetch(`${API}/battle-ready`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, battle_id })
+    });
+    _myReady = true;
+    btn.textContent = '✓ 已準備好';
+    btn.className   = 'btn btn-outline';
+  } catch {
+    toast('操作失敗，請重試');
+    btn.disabled = false; btn.textContent = '✓ 我準備好了';
+  }
+}
+
+async function doStart() {
+  if (uid === 'demo_user') { toast('示範模式'); return; }
+  const btn = document.getElementById('btnStart');
+  btn.disabled = true; btn.textContent = '開始中...';
+  try {
+    const r = await fetch(`${API}/battle-start`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, battle_id })
+    });
+    const d = await r.json();
+    if (!d.success) {
+      toast(d.error || '確認所有人已準備後再試');
+      btn.disabled = false; btn.textContent = '⚔️ 開始對戰';
+    }
+  } catch {
+    toast('開始失敗，請重試');
+    btn.disabled = false; btn.textContent = '⚔️ 開始對戰';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
