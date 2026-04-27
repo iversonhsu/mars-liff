@@ -1733,8 +1733,10 @@
       bodyEl.innerHTML = '<div class="journal-empty-msg">今天還沒有人開啟展示 ✨<br>開啟展示後，成員就能看到你的日記囉</div>';
       return;
     }
+    const _grpToday = _getTodayStr();
     bodyEl.innerHTML = `
-      <div class="journal-past-hd" style="margin-bottom:12px">今日群組日記</div>
+      <div class="journal-past-hd" style="margin-bottom:4px">今日展示</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;padding-left:2px;">${_fmtDateCN(_grpToday)}</div>
       ${entries.map(e => `
         <div class="journal-grp-card">
           <div class="journal-grp-member">
