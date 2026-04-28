@@ -28,21 +28,6 @@
       min-height: 100vh; overflow-x: hidden;
     }
 
-    /* ── Stars ── */
-    .stars {
-      position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background:
-        radial-gradient(1.5px 1.5px at 15% 25%, rgba(255,255,255,0.6) 0%, transparent 100%),
-        radial-gradient(1px   1px   at 55% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
-        radial-gradient(1px   1px   at 80% 35%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(2px   2px   at 35% 75%, rgba(167,139,250,0.7) 0%, transparent 100%),
-        radial-gradient(1px   1px   at 70% 65%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(1px   1px   at 90% 85%, rgba(255,255,255,0.3) 0%, transparent 100%),
-        radial-gradient(1.5px 1.5px at 25% 55%, rgba(255,255,255,0.5) 0%, transparent 100%),
-        radial-gradient(1px   1px   at 60% 90%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(2px   2px   at  5% 45%, rgba(167,139,250,0.5) 0%, transparent 100%);
-    }
-
     /* ── Screens ── */
     .screen { display: none; position: relative; z-index: 1; min-height: 100vh; padding: 20px 16px 44px; flex-direction: column; }
     .screen.active { display: flex; }
@@ -89,9 +74,9 @@
     .s-ready   { background: rgba(16,185,129,0.2); color: #34d399; }
 
     /* ── Lobby ── */
-    .lobby-meta { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 18px; display: flex; justify-content: space-between; }
-    .lobby-meta-item .lm-label { font-size: 11px; color: var(--sub); margin-bottom: 3px; }
-    .lobby-meta-item .lm-val   { font-size: 17px; font-weight: 700; }
+    .lobby-hd-room { flex: 1; min-width: 0; }
+    .lobby-hd-code { font-size: 20px; font-weight: 700; color: var(--pri-l); letter-spacing: 0.18em; line-height: 1.2; }
+    .lobby-hd-group { font-size: 11px; color: var(--sub); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .lobby-hint { font-size: 13px; color: var(--sub); text-align: center; margin: 16px 0; line-height: 1.6; }
     .lobby-btn-area { margin-top: auto; padding-top: 16px; }
 
@@ -225,7 +210,8 @@
     .ls-btns { display: flex; gap: 6px; flex: 1; }
     .ls-btn { flex: 1; padding: 8px 0; border-radius: 8px; border: 1.5px solid var(--border); background: transparent; color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.13s; }
     .ls-btn.active { border-color: var(--primary); background: rgba(124,58,237,0.22); color: var(--pri-l); box-shadow: 0 0 0 2px rgba(124,58,237,0.3); }
-    .ls-btn:active { transform: scale(0.96); opacity: 0.8; }
+    .ls-btn:active:not(:disabled) { transform: scale(0.96); opacity: 0.8; }
+    .ls-btn:disabled { opacity: 0.4; cursor: default; }
 
     /* ── Toast ── */
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--card2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 18px; font-size: 13px; white-space: nowrap; opacity: 0; transition: all 0.22s; z-index: 1000; pointer-events: none; }
@@ -234,8 +220,6 @@
   </style>
 </head>
 <body>
-
-<div class="stars"></div>
 
 <!-- Loading -->
 <div id="screenLoading">
@@ -299,30 +283,14 @@
 <div id="screenLobby" class="screen">
   <div class="screen-hd">
     <div class="back-btn" onclick="goBack()">←</div>
-    <div class="screen-title">對戰房間</div>
-    <span style="font-size:11px;font-weight:700;color:var(--sub);background:rgba(124,58,237,0.15);padding:4px 10px;border-radius:20px">等待中</span>
-  </div>
-
-  <div class="room-code-banner">
-    <div class="rcb-inner">
-      <div class="rcb-label">ROOM CODE</div>
-      <div class="rcb-code" id="lobbyRoomCode">---</div>
+    <div class="lobby-hd-room">
+      <div class="lobby-hd-code" id="lobbyRoomCode">------</div>
+      <div class="lobby-hd-group" id="lobbyGroup">---</div>
     </div>
     <button class="rcb-copy" onclick="copyRoomCode()">複製房號</button>
   </div>
 
-  <div class="lobby-meta">
-    <div class="lobby-meta-item">
-      <div class="lm-label">群組</div>
-      <div class="lm-val" id="lobbyGroup">---</div>
-    </div>
-    <div class="lobby-meta-item" style="text-align:right">
-      <div class="lm-label">題目數</div>
-      <div class="lm-val" id="lobbyMaxQ">---</div>
-    </div>
-  </div>
-
-  <div id="lobbySettings" style="display:none">
+  <div id="lobbySettings">
     <div class="lobby-settings">
       <div class="ls-title">⚙ 房間設定</div>
       <div class="ls-row">
@@ -445,6 +413,7 @@ let _setupQ     = 5;
 let _memberCache = {};
 let _membersPreloaded = false;
 let _roomCode = '';
+let _settingsTs = 0;
 
 /* ── Helpers ── */
 function gp(k) {
@@ -550,14 +519,13 @@ async function init() {
 
   try { await liff.init({ liffId: LIFF_ID }); } catch {}
 
-  if (!uid) {
-    try {
-      if (liff.isInClient()) {
-        const p = await liff.getProfile();
-        uid = p.userId;
-      }
-    } catch {}
-  }
+  try {
+    if (liff.isInClient()) {
+      const p = await liff.getProfile();
+      if (!uid) uid = p.userId;
+      _memberCache[p.userId] = { avatar: p.pictureUrl || '', nickname: p.displayName || '' };
+    }
+  } catch {}
   if (!uid) uid = 'demo_user';
 
   // Direct join via invite link (battle_id in URL)
@@ -741,24 +709,27 @@ function renderState(s) {
 /* ── Lobby ── */
 function renderLobby({ players = [], host_uid, max_questions, max_players = 4, room_code = '' }) {
   if (room_code) _roomCode = room_code;
-  document.getElementById('lobbyMaxQ').textContent = `${max_questions} 題`;
   const rcEl = document.getElementById('lobbyRoomCode');
-  if (rcEl) rcEl.textContent = _roomCode || '---';
+  if (rcEl) rcEl.textContent = _roomCode || '------';
 
   _isHost = uid === host_uid;
-  _setupP = parseInt(max_players) || _setupP;
-  _setupQ = parseInt(max_questions) || _setupQ;
+  if (Date.now() - _settingsTs > 1500) {
+    _setupP = parseInt(max_players) || _setupP;
+    _setupQ = parseInt(max_questions) || _setupQ;
+  }
 
-  // Settings panel: host only
+  // Settings panel: always visible; only host buttons are clickable
   const settEl = document.getElementById('lobbySettings');
   if (settEl) {
-    settEl.style.display = _isHost ? 'block' : 'none';
-    if (_isHost) {
-      document.querySelectorAll('.ls-btn[data-type="players"]').forEach(b =>
-        b.classList.toggle('active', +b.dataset.v === _setupP));
-      document.querySelectorAll('.ls-btn[data-type="questions"]').forEach(b =>
-        b.classList.toggle('active', +b.dataset.v === _setupQ));
-    }
+    settEl.style.display = 'block';
+    document.querySelectorAll('.ls-btn[data-type="players"]').forEach(b => {
+      b.classList.toggle('active', +b.dataset.v === _setupP);
+      b.disabled = !_isHost;
+    });
+    document.querySelectorAll('.ls-btn[data-type="questions"]').forEach(b => {
+      b.classList.toggle('active', +b.dataset.v === _setupQ);
+      b.disabled = !_isHost;
+    });
   }
 
   const me = players.find(p => p.uid === uid);
@@ -1050,6 +1021,7 @@ async function copyRoomCode() {
 
 async function updateLobbySettings(type, value) {
   if (!_isHost || !battle_id) return;
+  _settingsTs = Date.now();
   if (type === 'players') _setupP = value;
   else _setupQ = value;
   document.querySelectorAll(`.ls-btn[data-type="${type === 'players' ? 'players' : 'questions'}"]`).forEach(b =>
