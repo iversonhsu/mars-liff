@@ -273,7 +273,7 @@
   <div class="lobby-hint" id="lobbyHint"></div>
 
   <div class="lobby-btn-area">
-    <button class="btn btn-success" id="btnReady" onclick="toggleReady()">準備好了</button>
+    <button class="btn btn-success" id="btnReady" onclick="toggleReady()">準備</button>
     <button class="btn btn-primary" id="btnStart" onclick="doStart()" style="display:none">⚔️ 進入對戰</button>
   </div>
 </div>
@@ -285,7 +285,7 @@
     <div class="invite-title">邀請群組成員</div>
     <div class="invite-sub">點擊成員旁的「邀請」，即可透過 LINE 傳送邀請卡</div>
     <div id="inviteList"></div>
-    <button class="share-all-btn" onclick="shareInvite()">📤 傳送邀請連結</button>
+    <button class="share-all-btn" onclick="copyInviteLink()">🔗 複製邀請連結</button>
   </div>
 </div>
 
@@ -413,6 +413,21 @@ function goBack() {
   location.href = `group_room.html?${p}`;
 }
 
+/* ── Preload members (for avatar/name in lobby) ── */
+async function preloadMembers() {
+  if (!group_id) return;
+  try {
+    const r = await fetch(`${API}/group-members`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id })
+    });
+    const d = await r.json();
+    for (const m of (d.members || [])) {
+      if (m.uid) _memberCache[m.uid] = { avatar: m.line_avatar || '', nickname: m.nickname || '' };
+    }
+  } catch {}
+}
+
 /* ── Setup functions ── */
 function selPlayers(n) {
   _setupP = n;
@@ -436,6 +451,7 @@ async function doCreateBattle() {
     battle_id = d.battle_id;
     _isHost = true;
     document.getElementById('lobbyGroup').textContent = group_name;
+    preloadMembers();
     showScreen('screenLobby');
     startPoll();
   } catch (e) {
@@ -484,6 +500,7 @@ async function init() {
     } catch {}
   }
 
+  preloadMembers();
   startPoll();
 }
 
@@ -617,7 +634,7 @@ function renderLobby({ players = [], host_uid, max_questions, max_players = 4 })
         <div class="slot-av">${avHtml}</div>
         <div class="slot-name">${esc(name)}</div>
         ${isHost ? '<span class="slot-host-tag">房主</span>' : ''}
-        <span class="slot-ready-tag ${isReady ? 'ready' : 'waiting'}">${isReady ? '✓ 準備好了' : '等待中'}</span>
+        <span class="slot-ready-tag ${isReady ? 'ready' : 'waiting'}">${isReady ? '✓ 已準備' : '未準備'}</span>
       </div>`;
     } else {
       const clickAttr = _isHost ? 'onclick="openInviteModal()"' : '';
@@ -634,7 +651,7 @@ function renderLobby({ players = [], host_uid, max_questions, max_players = 4 })
 
   const btnReady = document.getElementById('btnReady');
   if (btnReady && !btnReady.disabled) {
-    btnReady.textContent = _myReady ? '✓ 已準備（點擊取消）' : '準備好了';
+    btnReady.textContent = _myReady ? '取消準備' : '準備';
     btnReady.className   = _myReady ? 'btn btn-outline' : 'btn btn-success';
   }
 
@@ -642,7 +659,7 @@ function renderLobby({ players = [], host_uid, max_questions, max_players = 4 })
   if (_isHost) {
     btnStart.style.display = 'block';
     btnStart.disabled      = !allReady;
-    btnStart.textContent   = allReady ? '⚔️ 進入對戰' : `等待全員準備 (${readyCnt}/${players.length})`;
+    btnStart.textContent   = allReady ? '⚔️ 進入對戰' : `等待全員準備 (${readyCnt}/${totalSlots})`;
   } else {
     btnStart.style.display = 'none';
   }
@@ -830,7 +847,7 @@ async function loadGroupMembers() {
       return `<div class="member-row">
         <div class="member-av">${avHtml}</div>
         <div class="member-name">${esc(name)}</div>
-        <button class="m-invite-btn" onclick="shareInviteToMember('${esc(m.uid)}')">邀請</button>
+        <button class="m-invite-btn" onclick="shareInviteToMember('${esc(m.uid)}', this)">邀請</button>
       </div>`;
     }).join('');
   } catch {
@@ -838,40 +855,40 @@ async function loadGroupMembers() {
   }
 }
 
-async function shareInviteToMember(targetUid) {
-  const link = `https://liff.line.me/${LIFF_ID}?uid=${encodeURIComponent(uid)}&group_id=${encodeURIComponent(group_id)}&group_name=${encodeURIComponent(group_name)}&battle_id=${encodeURIComponent(battle_id)}`;
+async function shareInviteToMember(targetUid, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '傳送中...'; }
   try {
-    await liff.shareTargetPicker([{
-      type: 'flex',
-      altText: '你被邀請加入對戰房間！',
-      contents: {
-        type: 'bubble',
-        body: {
-          type: 'box', layout: 'vertical', spacing: 'md',
-          contents: [
-            { type: 'text', text: '⚔️ 測驗對戰邀請', weight: 'bold', size: 'xl', color: '#a78bfa' },
-            { type: 'text', text: `群組：${group_name}`, size: 'sm', color: '#8b87c0', margin: 'sm' },
-            { type: 'text', text: '點擊下方按鈕加入對戰房間', size: 'sm', color: '#f0eeff', margin: 'md', wrap: true }
-          ]
-        },
-        footer: {
-          type: 'box', layout: 'vertical',
-          contents: [{
-            type: 'button', style: 'primary', color: '#7c3aed',
-            action: { type: 'uri', label: '加入房間', uri: link }
-          }]
-        }
-      }
-    }]);
-    toast('邀請已傳送！', 'ok');
-    closeInviteModal();
+    const r = await fetch(`${API}/battle-invite`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, battle_id, target_uid: targetUid, group_name })
+    });
+    const d = await r.json();
+    if (d.success !== false) {
+      toast('邀請已傳送！', 'ok');
+      if (btn) { btn.textContent = '已傳送'; }
+    } else {
+      toast('傳送失敗，請稍後再試');
+      if (btn) { btn.disabled = false; btn.textContent = '邀請'; }
+    }
   } catch {
-    toast('邀請傳送失敗');
+    toast('傳送失敗，請稍後再試');
+    if (btn) { btn.disabled = false; btn.textContent = '邀請'; }
   }
 }
 
-async function shareInvite() {
-  await shareInviteToMember('');
+async function copyInviteLink() {
+  const link = `https://liff.line.me/${LIFF_ID}?battle_id=${encodeURIComponent(battle_id)}&group_name=${encodeURIComponent(group_name)}`;
+  try {
+    await navigator.clipboard.writeText(link);
+    toast('邀請連結已複製！', 'ok');
+  } catch {
+    const el = document.createElement('textarea');
+    el.value = link; el.style.position = 'fixed'; el.style.opacity = '0';
+    document.body.appendChild(el); el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    toast('邀請連結已複製！', 'ok');
+  }
 }
 
 async function doStart() {
