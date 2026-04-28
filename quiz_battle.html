@@ -214,6 +214,13 @@
     .ls-btn:active:not(:disabled) { transform: scale(0.96); opacity: 0.8; }
     .ls-btn:disabled { opacity: 0.4; cursor: default; }
 
+    /* ── Kick / Leave ── */
+    .slot-kick-btn { position: absolute; top: 6px; left: 6px; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--red); background: rgba(239,68,68,0.1); color: var(--red); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; padding: 0; line-height: 1; }
+    .slot-kick-btn:active { background: rgba(239,68,68,0.3); }
+    .leave-btn { padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--red); background: rgba(239,68,68,0.1); color: var(--red); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.12s; white-space: nowrap; }
+    .leave-btn:active { background: rgba(239,68,68,0.28); }
+    .entry-back { position: absolute; top: 20px; left: 16px; z-index: 2; }
+
     /* ── Toast ── */
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--card2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 18px; font-size: 13px; white-space: nowrap; opacity: 0; transition: all 0.22s; z-index: 1000; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -240,6 +247,7 @@
 
 <!-- Entry -->
 <div id="screenEntry" class="screen">
+  <div class="back-btn entry-back" onclick="goBack()">←</div>
   <div class="entry-card">
     <div class="entry-logo">⚔️</div>
     <div class="entry-title">測驗對戰</div>
@@ -288,7 +296,10 @@
       <div class="lobby-hd-code" id="lobbyRoomCode">------</div>
       <div class="lobby-hd-group" id="lobbyGroup">---</div>
     </div>
-    <button class="rcb-copy" onclick="copyRoomCode()">複製房號</button>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="rcb-copy" onclick="copyRoomCode()">複製房號</button>
+      <button class="leave-btn" onclick="leaveRoom()">退出</button>
+    </div>
   </div>
 
   <div id="lobbySettings">
@@ -414,6 +425,9 @@ let _memberCache = {};
 let _membersPreloaded = false;
 let _roomCode = '';
 let _settingsTs = 0;
+let _leaving = false;
+let _readyTs = 0;
+let _groupMembers = [];
 
 /* ── Helpers ── */
 function gp(k) {
@@ -470,10 +484,32 @@ async function preloadMembers() {
       body: JSON.stringify({ group_id })
     });
     const d = await r.json();
-    for (const m of (d.members || [])) {
+    _groupMembers = d.members || [];
+    for (const m of _groupMembers) {
       if (m.uid) _memberCache[m.uid] = { avatar: m.line_avatar || '', nickname: m.nickname || '' };
     }
   } catch {}
+}
+
+function renderMemberList(members) {
+  const list = document.getElementById('inviteList');
+  if (!list) return;
+  const filtered = members.filter(m => m.uid !== uid);
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">沒有其他群組成員</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(m => {
+    const avHtml = m.line_avatar
+      ? `<img src="${esc(m.line_avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
+      : '🌟';
+    const name = m.nickname || m.uid.slice(-6);
+    return `<div class="member-row">
+      <div class="member-av">${avHtml}</div>
+      <div class="member-name">${esc(name)}</div>
+      <button class="m-invite-btn" onclick="shareInviteToMember('${esc(m.uid)}', this)">邀請</button>
+    </div>`;
+  }).join('');
 }
 
 /* ── Setup functions ── */
@@ -561,11 +597,39 @@ function goToSetup() {
 
 function goToEntry() {
   stopPoll();
+  _leaving    = true;
   battle_id   = '';
   _roomCode   = '';
   _lastStatus = '';
   _isHost     = false;
   showScreen('screenEntry');
+}
+
+async function leaveRoom() {
+  const bid = battle_id;
+  stopPoll();
+  _leaving    = true;
+  battle_id   = '';
+  _roomCode   = '';
+  _lastStatus = '';
+  _isHost     = false;
+  showScreen('screenEntry');
+  if (uid !== 'demo_user' && bid) {
+    fetch(`${API}/battle-kick`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, battle_id: bid, target_uid: uid })
+    }).catch(() => {});
+  }
+}
+
+async function kickPlayer(targetUid) {
+  if (!_isHost || !battle_id) return;
+  try {
+    await fetch(`${API}/battle-kick`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, battle_id, target_uid: targetUid })
+    });
+  } catch { toast('踢出失敗，請重試'); }
 }
 
 async function joinByCode() {
@@ -606,7 +670,7 @@ async function joinByCode() {
 }
 
 /* ── Polling ── */
-function startPoll() { poll(); _poll = setInterval(poll, 1000); }
+function startPoll() { _leaving = false; poll(); _poll = setInterval(poll, 1000); }
 function stopPoll()  { if (_poll) { clearInterval(_poll); _poll = null; } }
 
 async function poll() {
@@ -634,9 +698,22 @@ async function advance() {
 
 /* ── State router ── */
 function renderState(s) {
+  if (_leaving) return;
+
   if (!group_id && s.group_id) {
     group_id = s.group_id;
     if (!_membersPreloaded) { _membersPreloaded = true; preloadMembers(); }
+  }
+
+  if (s.you_are_kicked) {
+    stopPoll();
+    _leaving = true;
+    toast('您已被踢出房間');
+    setTimeout(() => {
+      battle_id = ''; _roomCode = ''; _lastStatus = ''; _isHost = false;
+      showScreen('screenEntry');
+    }, 1800);
+    return;
   }
 
   const { status, players = [], question, current_answers = [],
@@ -742,7 +819,9 @@ function renderLobby({ players = [], host_uid, max_questions, max_players = 4, r
   }
 
   const me = players.find(p => p.uid === uid);
-  _myReady = me?.status === 'ready';
+  if (Date.now() - _readyTs > 1500) {
+    _myReady = me?.status === 'ready';
+  }
 
   const totalSlots = parseInt(max_players) || 4;
   let html = '';
@@ -758,7 +837,9 @@ function renderLobby({ players = [], host_uid, max_questions, max_players = 4, r
       const avHtml  = avSrc
         ? `<img src="${esc(avSrc)}" alt="" onerror="this.parentElement.textContent='🌟'">`
         : '🌟';
+      const kickBtn = (_isHost && !isSelf) ? `<button class="slot-kick-btn" onclick="kickPlayer('${esc(p.uid)}')">✕</button>` : '';
       html += `<div class="slot-card${isSelf ? ' is-self' : ''}">
+        ${kickBtn}
         ${isHost ? '<span class="slot-host-tag">房主</span>' : ''}
         <div class="slot-av">${avHtml}</div>
         <div class="slot-name">${esc(name)}</div>
@@ -937,6 +1018,7 @@ function renderFinal({ players = [], max_questions }) {
 async function toggleReady() {
   if (uid === 'demo_user') { toast('示範模式'); return; }
   const newReady = !_myReady;
+  _readyTs = Date.now();
   _myReady = newReady;
   const btn = document.getElementById('btnReady');
   btn.textContent = newReady ? '取消準備' : '準備';
@@ -962,35 +1044,29 @@ function closeInviteModal() {
 }
 
 async function loadGroupMembers() {
-  const list = document.getElementById('inviteList');
-  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">載入成員中...</div>';
+  // 若快取已有資料，立即顯示，同時背景更新
+  if (_groupMembers.length > 0) {
+    renderMemberList(_groupMembers);
+  } else {
+    const list = document.getElementById('inviteList');
+    if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">載入成員中...</div>';
+  }
   try {
     const r = await fetch(`${API}/group-members`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ group_id })
     });
     const d = await r.json();
-    const members = (d.members || []).filter(m => m.uid !== uid);
-    if (members.length === 0) {
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">沒有其他群組成員</div>';
-      return;
-    }
-    for (const m of members) {
+    _groupMembers = d.members || [];
+    for (const m of _groupMembers) {
       if (m.uid) _memberCache[m.uid] = { avatar: m.line_avatar || '', nickname: m.nickname || '' };
     }
-    list.innerHTML = members.map(m => {
-      const avHtml = m.line_avatar
-        ? `<img src="${esc(m.line_avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
-        : '🌟';
-      const name = m.nickname || m.uid.slice(-6);
-      return `<div class="member-row">
-        <div class="member-av">${avHtml}</div>
-        <div class="member-name">${esc(name)}</div>
-        <button class="m-invite-btn" onclick="shareInviteToMember('${esc(m.uid)}', this)">邀請</button>
-      </div>`;
-    }).join('');
+    renderMemberList(_groupMembers);
   } catch {
-    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">載入失敗，請重試</div>';
+    if (_groupMembers.length === 0) {
+      const list = document.getElementById('inviteList');
+      if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">載入失敗，請重試</div>';
+    }
   }
 }
 
@@ -1028,9 +1104,9 @@ async function copyRoomCode() {
   }
   const btn = document.querySelector('.rcb-copy');
   if (btn) {
-    btn.textContent = '已複製';
+    btn.textContent = '已複製!';
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = '複製房號'; btn.classList.remove('copied'); }, 1500);
+    setTimeout(() => { btn.textContent = '複製房號'; btn.classList.remove('copied'); }, 2000);
   }
 }
 
