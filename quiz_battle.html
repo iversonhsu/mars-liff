@@ -199,8 +199,9 @@
     .rcb-inner { flex: 1; }
     .rcb-label { font-size: 10px; font-weight: 700; color: var(--sub); letter-spacing: 0.08em; margin-bottom: 2px; }
     .rcb-code { font-size: 22px; font-weight: 700; color: var(--pri-l); letter-spacing: 0.2em; }
-    .rcb-copy { padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--primary); background: transparent; color: var(--pri-l); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.12s; white-space: nowrap; }
+    .rcb-copy { padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--primary); background: transparent; color: var(--pri-l); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; white-space: nowrap; }
     .rcb-copy:active { background: rgba(124,58,237,0.22); }
+    .rcb-copy.copied { border-color: var(--green); background: rgba(16,185,129,0.18); color: #34d399; }
 
     /* ── Lobby Settings Panel ── */
     .lobby-settings { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 14px 6px; margin-bottom: 14px; }
@@ -282,7 +283,7 @@
 <!-- Lobby -->
 <div id="screenLobby" class="screen">
   <div class="screen-hd">
-    <div class="back-btn" onclick="goBack()">←</div>
+    <div class="back-btn" onclick="goToEntry()">←</div>
     <div class="lobby-hd-room">
       <div class="lobby-hd-code" id="lobbyRoomCode">------</div>
       <div class="lobby-hd-group" id="lobbyGroup">---</div>
@@ -292,7 +293,7 @@
 
   <div id="lobbySettings">
     <div class="lobby-settings">
-      <div class="ls-title">⚙ 房間設定</div>
+      <div class="ls-title">⚙ 對戰設定</div>
       <div class="ls-row">
         <span class="ls-label">人數</span>
         <div class="ls-btns">
@@ -329,7 +330,6 @@
     <div class="invite-title">邀請群組成員</div>
     <div class="invite-sub">點擊成員旁的「邀請」，即可透過 LINE 傳送邀請卡</div>
     <div id="inviteList"></div>
-    <button class="share-all-btn" onclick="copyRoomCode()">🔗 複製房號</button>
   </div>
 </div>
 
@@ -556,7 +556,16 @@ async function init() {
 }
 
 function goToSetup() {
-  showScreen('screenSetup');
+  doCreateBattle();
+}
+
+function goToEntry() {
+  stopPoll();
+  battle_id   = '';
+  _roomCode   = '';
+  _lastStatus = '';
+  _isHost     = false;
+  showScreen('screenEntry');
 }
 
 async function joinByCode() {
@@ -928,8 +937,10 @@ function renderFinal({ players = [], max_questions }) {
 async function toggleReady() {
   if (uid === 'demo_user') { toast('示範模式'); return; }
   const newReady = !_myReady;
+  _myReady = newReady;
   const btn = document.getElementById('btnReady');
-  btn.disabled = true; btn.textContent = '更新中...';
+  btn.textContent = newReady ? '取消準備' : '準備';
+  btn.className   = newReady ? 'btn btn-outline' : 'btn btn-success';
   try {
     await fetch(`${API}/battle-ready`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -937,8 +948,8 @@ async function toggleReady() {
     });
   } catch {
     toast('操作失敗，請重試');
+    _myReady = !newReady;
   }
-  btn.disabled = false;
 }
 
 /* ── Invite Modal ── */
@@ -1008,14 +1019,18 @@ async function copyRoomCode() {
   if (!_roomCode) { toast('房號尚未載入'); return; }
   try {
     await navigator.clipboard.writeText(_roomCode);
-    toast('房號已複製！', 'ok');
   } catch {
     const el = document.createElement('textarea');
     el.value = _roomCode; el.style.position = 'fixed'; el.style.opacity = '0';
     document.body.appendChild(el); el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
-    toast('房號已複製！', 'ok');
+  }
+  const btn = document.querySelector('.rcb-copy');
+  if (btn) {
+    btn.textContent = '已複製';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '複製房號'; btn.classList.remove('copied'); }, 1500);
   }
 }
 
