@@ -720,17 +720,6 @@
     .journal-grp-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .journal-grp-name { font-size: 13px; font-weight: 700; color: var(--pri-text); }
 
-    /* ── Battle Setup ── */
-    .qcount-btn {
-      flex: 1; padding: 13px 0; border-radius: 10px;
-      border: 1.5px solid var(--border); background: var(--bg);
-      color: var(--text); font-size: 15px; font-weight: 700;
-      cursor: pointer; font-family: inherit; transition: all 0.15s;
-    }
-    .qcount-btn.active {
-      border-color: var(--primary); background: var(--pri-bg);
-      color: var(--primary);
-    }
 
     /* ── Loading ── */
     .loading { display: flex; justify-content: center; padding: 52px; }
@@ -830,7 +819,7 @@
     </div>
     <div class="drawer-item" onclick="showToast('即將推出')">個人檔案</div>
     <div class="drawer-item" onclick="showToast('即將推出')">星獸收集</div>
-    <div class="drawer-item" onclick="closeMenu(); openBattleSetup()">測驗對戰</div>
+    <div class="drawer-item" onclick="closeMenu(); goToBattleLobby()">測驗對戰</div>
     <div class="drawer-item"             onclick="closeMenu(); openJournal()">心情札記</div>
     <div class="drawer-item sep"         onclick="closeMenu(); window.open('https://youtu.be/DX0Z5u-tDys','_blank')">前導故事</div>
     <div class="drawer-item blue sep"    onclick="closeMenu(); openInvite()">邀請好友</div>
@@ -895,27 +884,6 @@
       <button onclick="closeNicknameEdit()"
         style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">取消</button>
     </div>
-  </div>
-</div>
-
-<!-- Battle Setup Sheet -->
-<div class="help-overlay" id="battleOverlay" onclick="closeBattleSetup()">
-  <div class="help-sheet" onclick="event.stopPropagation()">
-    <div class="help-handle"></div>
-    <div class="help-title">⚔️ 測驗對戰</div>
-    <p style="font-size:13px;color:var(--subtext);margin-bottom:18px;line-height:1.6">
-      邀請群組成員一起對戰！最多 4 人，每題限時 10 秒作答。
-    </p>
-    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">選擇題目數量</div>
-    <div style="display:flex;gap:10px;margin-bottom:22px">
-      <button class="qcount-btn active" data-q="3"  onclick="selectQCount(3)">3 題</button>
-      <button class="qcount-btn"        data-q="5"  onclick="selectQCount(5)">5 題</button>
-      <button class="qcount-btn"        data-q="10" onclick="selectQCount(10)">10 題</button>
-    </div>
-    <button id="createBattleBtn" onclick="createBattle()"
-      style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.15s">
-      建立對戰房間
-    </button>
   </div>
 </div>
 
@@ -1817,87 +1785,12 @@
     }
   }
 
-  /* ── Battle Setup ─────────────────────────────────────────────── */
-  let _battleQ = 3;
-
-  function openBattleSetup() {
+  /* ── Battle Lobby ────────────────────────────────────────────── */
+  function goToBattleLobby() {
     if (!uid || uid === 'demo_user') { showToast('示範模式無法使用對戰功能'); return; }
-    _battleQ = 3;
-    document.querySelectorAll('.qcount-btn').forEach(b => b.classList.toggle('active', b.dataset.q === '3'));
-    const btn = document.getElementById('createBattleBtn');
-    btn.disabled = false; btn.textContent = '建立對戰房間';
-    document.getElementById('battleOverlay').classList.add('open');
-  }
-  function closeBattleSetup() {
-    document.getElementById('battleOverlay').classList.remove('open');
-  }
-  function selectQCount(n) {
-    _battleQ = n;
-    document.querySelectorAll('.qcount-btn').forEach(b => b.classList.toggle('active', +b.dataset.q === n));
-  }
-
-  async function createBattle() {
-    if (!uid || uid === 'demo_user') { showToast('示範模式'); return; }
-    const btn = document.getElementById('createBattleBtn');
-    btn.disabled = true; btn.textContent = '建立中...';
-    try {
-      const r = await fetch(`${API}/battle-create`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid, group_id, max_questions: _battleQ })
-      });
-      const d = await r.json();
-      if (!d.success || !d.battle_id) throw new Error(d.error || '建立失敗');
-
-      closeBattleSetup();
-
-      // Send battle invite via shareTargetPicker
-      const ready = await ensureLiff();
-      if (ready && liff.isInClient()) {
-        const battleUrl = `https://liff.line.me/2009047186-MXDITyXh?battle_id=${encodeURIComponent(d.battle_id)}&group_id=${encodeURIComponent(group_id)}&group_name=${encodeURIComponent(group_name)}`;
-        const inviterName = myNickname || '隊友';
-        try {
-          await liff.shareTargetPicker([{
-            type: 'flex',
-            altText: `${inviterName} 發起測驗對戰，快來加入！`,
-            contents: {
-              type: 'bubble', size: 'kilo',
-              header: {
-                type: 'box', layout: 'vertical',
-                backgroundColor: '#4f46e5', paddingAll: '14px',
-                contents: [{ type: 'text', text: '⚔️ 測驗對戰', color: '#ffffff', size: 'md', weight: 'bold', align: 'center' }]
-              },
-              body: {
-                type: 'box', layout: 'vertical',
-                paddingTop: '14px', paddingBottom: '10px', paddingStart: '16px', paddingEnd: '16px',
-                spacing: 'sm',
-                contents: [
-                  { type: 'text', text: `${inviterName} 向你發起挑戰！`, color: '#6b7280', size: 'sm', wrap: true },
-                  { type: 'text', text: group_name, color: '#1c1a2e', size: 'xl', weight: 'bold', wrap: true },
-                  { type: 'text', text: `${_battleQ} 題對戰・每題限時 10 秒`, color: '#6b7280', size: 'sm', wrap: true }
-                ]
-              },
-              footer: {
-                type: 'box', layout: 'vertical',
-                paddingTop: '10px', paddingBottom: '14px', paddingStart: '28px', paddingEnd: '28px',
-                contents: [{
-                  type: 'button', style: 'primary', color: '#4f46e5', height: 'sm',
-                  action: { type: 'uri', label: '加入對戰！', uri: battleUrl }
-                }]
-              }
-            }
-          }], { isMultiple: true });
-        } catch (e) { console.warn('[battle invite]', e); }
-      }
-
-      // Navigate to battle page
-      const params = new URLSearchParams({ battle_id: d.battle_id, uid, group_id, group_name });
-      if (inv_code) params.set('invite_code', inv_code);
-      location.href = `quiz_battle.html?${params}`;
-
-    } catch (e) {
-      showToast(e.message || '建立失敗，請重試');
-      btn.disabled = false; btn.textContent = '建立對戰房間';
-    }
+    const params = new URLSearchParams({ uid, group_id, group_name, host: '1' });
+    if (inv_code) params.set('invite_code', inv_code);
+    location.href = `quiz_battle.html?${params}`;
   }
 
   init();
