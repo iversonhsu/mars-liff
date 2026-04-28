@@ -670,10 +670,18 @@ async function joinByCode() {
 }
 
 /* ── Polling ── */
-function startPoll() { _leaving = false; poll(); _poll = setInterval(poll, 1000); }
-function stopPoll()  { if (_poll) { clearInterval(_poll); _poll = null; } }
+function getPollInterval() {
+  if (_lastStatus === 'countdown' || _lastStatus === 'question') return 1000;
+  if (_lastStatus === 'reveal') return 2000;
+  if (_lastStatus === 'finished') return null;
+  return 3000; // waiting 或初始
+}
+
+function startPoll() { _leaving = false; poll(); }
+function stopPoll()  { if (_poll) { clearTimeout(_poll); _poll = null; } }
 
 async function poll() {
+  if (_leaving || !battle_id) return;
   try {
     const r = await fetch(`${API}/battle-state`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -682,6 +690,9 @@ async function poll() {
     const s = await r.json();
     if (s && !s.error) renderState(s);
   } catch {}
+  if (_leaving) return;
+  const ms = getPollInterval();
+  if (ms !== null) _poll = setTimeout(poll, ms);
 }
 
 async function advance() {
