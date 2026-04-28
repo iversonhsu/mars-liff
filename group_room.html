@@ -1788,7 +1788,7 @@
   /* ── Battle Lobby ────────────────────────────────────────────── */
   function goToBattleLobby() {
     if (!uid || uid === 'demo_user') { showToast('示範模式無法使用對戰功能'); return; }
-    const params = new URLSearchParams({ uid, group_id, group_name, host: '1' });
+    const params = new URLSearchParams({ uid, group_id, group_name });
     if (inv_code) params.set('invite_code', inv_code);
     location.href = `quiz_battle.html?${params}`;
   }
