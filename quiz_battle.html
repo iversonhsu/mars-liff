@@ -11,10 +11,10 @@
       --bg:      #0d0c1d;
       --card:    #1a1830;
       --card2:   #221f3a;
-      --border:  #2d2b4e;
+      --border:  #3e3b65;
       --text:    #f0eeff;
       --sub:     #8b87c0;
-      --muted:   #5c597a;
+      --muted:   #7a769e;
       --primary: #7c3aed;
       --pri-l:   #a78bfa;
       --gold:    #f59e0b;
@@ -113,7 +113,7 @@
     .q-opts  { display: flex; flex-direction: column; gap: 10px; }
     .q-opt   { padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.14s; font-size: 14px; font-weight: 500; }
     .q-opt:active { transform: scale(0.99); }
-    .q-opt.selected { border-color: var(--primary); background: rgba(124,58,237,0.15); }
+    .q-opt.selected { border-color: var(--pri-l); background: rgba(124,58,237,0.28); box-shadow: 0 0 0 2px rgba(124,58,237,0.4); }
     .q-opt.selected .q-opt-k { background: var(--primary); color: #fff; border-color: var(--primary); }
     .q-opt.disabled { cursor: default; opacity: 0.55; }
     .q-opt-k { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--pri-l); flex-shrink: 0; }
@@ -162,7 +162,7 @@
     /* ── Setup Screen ── */
     .sel-row { display: flex; gap: 10px; margin-bottom: 8px; }
     .sel-btn { flex: 1; padding: 13px 0; border-radius: 10px; border: 1.5px solid var(--border); background: transparent; color: var(--text); font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-    .sel-btn.active { border-color: var(--primary); background: rgba(124,58,237,0.15); color: var(--pri-l); }
+    .sel-btn.active { border-color: var(--primary); background: rgba(124,58,237,0.22); color: var(--pri-l); box-shadow: 0 0 0 2px rgba(124,58,237,0.35); }
     .setup-desc { font-size: 13px; color: var(--sub); line-height: 1.7; margin-bottom: 24px; }
 
     /* ── Player Slots ── */
@@ -175,7 +175,7 @@
     .slot-av img { width: 100%; height: 100%; object-fit: cover; }
     .slot-plus { width: 52px; height: 52px; border-radius: 12px; background: var(--card2); border: 1.5px dashed var(--muted); display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--muted); }
     .slot-name { font-size: 13px; font-weight: 700; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .slot-host-tag { font-size: 10px; font-weight: 700; color: var(--gold); background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 2px 7px; border-radius: 20px; }
+    .slot-host-tag { position: absolute; top: 6px; right: 6px; font-size: 10px; font-weight: 700; color: var(--gold); background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 2px 7px; border-radius: 20px; }
     .slot-ready-tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
     .slot-ready-tag.ready   { background: rgba(16,185,129,0.2); color: #34d399; }
     .slot-ready-tag.waiting { background: rgba(107,114,128,0.2); color: #9ca3af; }
@@ -195,6 +195,37 @@
     .m-invite-btn { padding: 7px 14px; border-radius: 8px; border: 1.5px solid var(--primary); background: transparent; color: var(--pri-l); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
     .m-joined-tag { font-size: 12px; color: var(--green); font-weight: 700; }
     .share-all-btn { width: 100%; padding: 13px; border-radius: 12px; border: 1.5px solid var(--border); background: transparent; color: var(--sub); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 14px; }
+
+    /* ── Entry Screen ── */
+    #screenEntry { justify-content: center; align-items: center; }
+    .entry-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 20px; padding: 32px 24px; width: 100%; max-width: 340px; }
+    .entry-logo { font-size: 44px; text-align: center; margin-bottom: 8px; }
+    .entry-title { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+    .entry-sub { font-size: 13px; color: var(--sub); text-align: center; margin-bottom: 24px; line-height: 1.6; }
+    .entry-or { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+    .entry-or::before, .entry-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .entry-or span { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+    .room-code-input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card2); color: var(--text); font-size: 20px; font-weight: 700; text-align: center; letter-spacing: 0.2em; font-family: inherit; margin-bottom: 10px; transition: border-color 0.15s, box-shadow 0.15s; }
+    .room-code-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(124,58,237,0.25); }
+    .room-code-input::placeholder { font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--muted); }
+
+    /* ── Room Code Banner ── */
+    .room-code-banner { display: flex; align-items: center; gap: 10px; background: rgba(124,58,237,0.12); border: 1.5px solid rgba(124,58,237,0.35); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; }
+    .rcb-inner { flex: 1; }
+    .rcb-label { font-size: 10px; font-weight: 700; color: var(--sub); letter-spacing: 0.08em; margin-bottom: 2px; }
+    .rcb-code { font-size: 22px; font-weight: 700; color: var(--pri-l); letter-spacing: 0.2em; }
+    .rcb-copy { padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--primary); background: transparent; color: var(--pri-l); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.12s; white-space: nowrap; }
+    .rcb-copy:active { background: rgba(124,58,237,0.22); }
+
+    /* ── Lobby Settings Panel ── */
+    .lobby-settings { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 14px 6px; margin-bottom: 14px; }
+    .ls-title { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; color: var(--muted); margin-bottom: 12px; }
+    .ls-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .ls-label { font-size: 12px; font-weight: 700; color: var(--sub); width: 36px; flex-shrink: 0; }
+    .ls-btns { display: flex; gap: 6px; flex: 1; }
+    .ls-btn { flex: 1; padding: 8px 0; border-radius: 8px; border: 1.5px solid var(--border); background: transparent; color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.13s; }
+    .ls-btn.active { border-color: var(--primary); background: rgba(124,58,237,0.22); color: var(--pri-l); box-shadow: 0 0 0 2px rgba(124,58,237,0.3); }
+    .ls-btn:active { transform: scale(0.96); opacity: 0.8; }
 
     /* ── Toast ── */
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--card2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 18px; font-size: 13px; white-space: nowrap; opacity: 0; transition: all 0.22s; z-index: 1000; pointer-events: none; }
@@ -219,6 +250,21 @@
     <div class="err-msg" id="errMsg">發生錯誤，請重試</div>
     <button class="btn btn-secondary" style="max-width:200px;margin-top:8px" onclick="location.reload()">重新載入</button>
     <button class="btn btn-outline" style="max-width:200px" onclick="goBack()">返回群組</button>
+  </div>
+</div>
+
+<!-- Entry -->
+<div id="screenEntry" class="screen">
+  <div class="entry-card">
+    <div class="entry-logo">⚔️</div>
+    <div class="entry-title">測驗對戰</div>
+    <div class="entry-sub">輸入房號加入對戰，或建立一個新房間</div>
+    <input class="room-code-input" id="joinCodeInput" placeholder="輸入 6 位房號" maxlength="6"
+      oninput="this.value = this.value.toUpperCase()"
+      onkeydown="if(event.key==='Enter') joinByCode()">
+    <button class="btn btn-outline" id="joinCodeBtn" onclick="joinByCode()">加入房間</button>
+    <div class="entry-or"><span>或</span></div>
+    <button class="btn btn-primary" onclick="goToSetup()">⚔️ 建立對戰</button>
   </div>
 </div>
 
@@ -257,6 +303,14 @@
     <span style="font-size:11px;font-weight:700;color:var(--sub);background:rgba(124,58,237,0.15);padding:4px 10px;border-radius:20px">等待中</span>
   </div>
 
+  <div class="room-code-banner">
+    <div class="rcb-inner">
+      <div class="rcb-label">ROOM CODE</div>
+      <div class="rcb-code" id="lobbyRoomCode">---</div>
+    </div>
+    <button class="rcb-copy" onclick="copyRoomCode()">複製房號</button>
+  </div>
+
   <div class="lobby-meta">
     <div class="lobby-meta-item">
       <div class="lm-label">群組</div>
@@ -265,6 +319,28 @@
     <div class="lobby-meta-item" style="text-align:right">
       <div class="lm-label">題目數</div>
       <div class="lm-val" id="lobbyMaxQ">---</div>
+    </div>
+  </div>
+
+  <div id="lobbySettings" style="display:none">
+    <div class="lobby-settings">
+      <div class="ls-title">⚙ 房間設定</div>
+      <div class="ls-row">
+        <span class="ls-label">人數</span>
+        <div class="ls-btns">
+          <button class="ls-btn" data-type="players" data-v="2" onclick="updateLobbySettings('players',2)">2人</button>
+          <button class="ls-btn" data-type="players" data-v="3" onclick="updateLobbySettings('players',3)">3人</button>
+          <button class="ls-btn" data-type="players" data-v="4" onclick="updateLobbySettings('players',4)">4人</button>
+        </div>
+      </div>
+      <div class="ls-row">
+        <span class="ls-label">題數</span>
+        <div class="ls-btns">
+          <button class="ls-btn" data-type="questions" data-v="3" onclick="updateLobbySettings('questions',3)">3題</button>
+          <button class="ls-btn" data-type="questions" data-v="5" onclick="updateLobbySettings('questions',5)">5題</button>
+          <button class="ls-btn" data-type="questions" data-v="10" onclick="updateLobbySettings('questions',10)">10題</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -285,14 +361,14 @@
     <div class="invite-title">邀請群組成員</div>
     <div class="invite-sub">點擊成員旁的「邀請」，即可透過 LINE 傳送邀請卡</div>
     <div id="inviteList"></div>
-    <button class="share-all-btn" onclick="copyInviteLink()">🔗 複製邀請連結</button>
+    <button class="share-all-btn" onclick="copyRoomCode()">🔗 複製房號</button>
   </div>
 </div>
 
 <!-- Countdown -->
 <div id="screenCountdown" class="screen">
   <div class="cd-label">準備迎接挑戰！</div>
-  <div class="cd-num" id="cdNum">3</div>
+  <div class="cd-num" id="cdNum">5</div>
   <div class="cd-sub">題目即將出現...</div>
 </div>
 
@@ -307,7 +383,7 @@
           stroke-dasharray="276.46" stroke-dashoffset="0"
           style="transition:stroke-dashoffset 0.5s linear;stroke-linecap:round"/>
       </svg>
-      <div class="q-timer-num" id="timerNum">10</div>
+      <div class="q-timer-num" id="timerNum">15</div>
     </div>
   </div>
   <div class="q-text" id="qText">載入題目...</div>
@@ -326,7 +402,7 @@
   <div id="rvPlayers"></div>
   <div class="rv-next">
     <span id="rvNextLabel">下一題</span>
-    <span class="rv-next-n" id="rvNextNum">3</span>
+    <span class="rv-next-n" id="rvNextNum">5</span>
     <span>秒後開始</span>
   </div>
 </div>
@@ -337,7 +413,8 @@
   <div class="final-sub" id="finalSub">精彩一戰！</div>
   <div class="podium" id="finalRanking"></div>
   <div>
-    <button class="btn btn-primary" onclick="goBack()">返回群組</button>
+    <button class="btn btn-primary" onclick="playAgain()">再來一場</button>
+    <button class="btn btn-secondary" onclick="goBack()">離開房間</button>
   </div>
 </div>
 
@@ -366,6 +443,8 @@ let _isHost     = false;
 let _setupP     = 2;
 let _setupQ     = 5;
 let _memberCache = {};
+let _membersPreloaded = false;
+let _roomCode = '';
 
 /* ── Helpers ── */
 function gp(k) {
@@ -389,7 +468,7 @@ function toast(msg, type = '') {
 
 function showScreen(id) {
   document.getElementById('screenLoading').style.display = 'none';
-  ['screenSetup','screenLobby','screenCountdown','screenQuestion','screenReveal','screenFinal'].forEach(s => {
+  ['screenEntry','screenSetup','screenLobby','screenCountdown','screenQuestion','screenReveal','screenFinal'].forEach(s => {
     document.getElementById(s).classList.remove('active');
   });
   document.getElementById('screenError').style.display = 'none';
@@ -481,27 +560,72 @@ async function init() {
   }
   if (!uid) uid = 'demo_user';
 
-  // Host entering without battle_id → show setup
-  if (!battle_id && isHostParam) {
+  // Direct join via invite link (battle_id in URL)
+  if (battle_id) {
+    document.getElementById('lobbyGroup').textContent = group_name;
+    if (uid !== 'demo_user') {
+      try {
+        await fetch(`${API}/battle-join`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid, battle_id })
+        });
+      } catch {}
+    }
+    preloadMembers();
+    _membersPreloaded = true;
+    startPoll();
+    return;
+  }
+
+  // Legacy: host=1 param → go to setup directly
+  if (isHostParam) {
     showScreen('screenSetup');
     return;
   }
 
-  if (!battle_id) { showError('找不到對戰房間，請重新點擊邀請連結'); return; }
+  // Default: show entry screen
+  showScreen('screenEntry');
+}
 
-  document.getElementById('lobbyGroup').textContent = group_name;
+function goToSetup() {
+  showScreen('screenSetup');
+}
 
-  if (uid !== 'demo_user') {
-    try {
-      await fetch(`${API}/battle-join`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid, battle_id })
-      });
-    } catch {}
+async function joinByCode() {
+  const inp = document.getElementById('joinCodeInput');
+  const code = (inp?.value || '').trim().toUpperCase();
+  if (code.length < 4) { toast('請輸入正確房號'); return; }
+  const btn = document.getElementById('joinCodeBtn');
+  btn.disabled = true; btn.textContent = '搜尋中...';
+  try {
+    const r = await fetch(`${API}/battle-find`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room_code: code, uid })
+    });
+    const d = await r.json();
+    if (!d.success || !d.battle_id) {
+      toast(d.error || '找不到該房號');
+      btn.disabled = false; btn.textContent = '加入房間';
+      return;
+    }
+    battle_id = d.battle_id;
+    if (d.group_id) group_id = d.group_id;
+    document.getElementById('lobbyGroup').textContent = group_name;
+    if (uid !== 'demo_user') {
+      try {
+        await fetch(`${API}/battle-join`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid, battle_id })
+        });
+      } catch {}
+    }
+    preloadMembers();
+    _membersPreloaded = true;
+    startPoll();
+  } catch {
+    toast('加入失敗，請重試');
+    btn.disabled = false; btn.textContent = '加入房間';
   }
-
-  preloadMembers();
-  startPoll();
 }
 
 /* ── Polling ── */
@@ -533,6 +657,11 @@ async function advance() {
 
 /* ── State router ── */
 function renderState(s) {
+  if (!group_id && s.group_id) {
+    group_id = s.group_id;
+    if (!_membersPreloaded) { _membersPreloaded = true; preloadMembers(); }
+  }
+
   const { status, players = [], question, current_answers = [],
           max_questions, current_index, question_started_at, host_uid } = s;
 
@@ -550,7 +679,7 @@ function renderState(s) {
 
     case 'countdown': {
       if (_lastStatus !== 'countdown') { showScreen('screenCountdown'); _lastCdNum = -1; }
-      const rem  = Math.max(0, 3 - elapsed);
+      const rem  = Math.max(0, 5 - elapsed);
       const num  = Math.max(1, Math.ceil(rem));
       if (num !== _lastCdNum) {
         _lastCdNum = num;
@@ -560,7 +689,7 @@ function renderState(s) {
         void el.offsetWidth;
         el.style.animation = 'pulse-in 0.85s ease-out';
       }
-      if (elapsed > 3.3) advance();
+      if (elapsed > 5.3) advance();
       break;
     }
 
@@ -572,9 +701,10 @@ function renderState(s) {
         _qLastIdx  = idx;
         renderQuestion(s);
       }
-      updateTimer(Math.max(0, 10 - elapsed));
+      updateTimer(Math.max(0, 15 - elapsed));
       renderStrip(players, current_answers);
-      if (elapsed > 10.5) advance();
+      if (players.length > 0 && current_answers.length >= players.length) advance();
+      else if (elapsed > 15.5) advance();
       break;
     }
 
@@ -585,14 +715,14 @@ function renderState(s) {
         _rvLastIdx = idx;
         renderReveal(s);
       }
-      const rem = Math.max(0, 3 - elapsed);
+      const rem = Math.max(0, 5 - elapsed);
       const numEl = document.getElementById('rvNextNum');
       if (numEl) numEl.textContent = Math.max(1, Math.ceil(rem));
       // Last question: change label
       const isLast = idx >= parseInt(max_questions) - 1;
       const lbl = document.getElementById('rvNextLabel');
       if (lbl) lbl.textContent = isLast ? '對戰結束' : '下一題';
-      if (elapsed > 3.3) advance();
+      if (elapsed > 5.3) advance();
       break;
     }
 
@@ -609,10 +739,28 @@ function renderState(s) {
 }
 
 /* ── Lobby ── */
-function renderLobby({ players = [], host_uid, max_questions, max_players = 4 }) {
+function renderLobby({ players = [], host_uid, max_questions, max_players = 4, room_code = '' }) {
+  if (room_code) _roomCode = room_code;
   document.getElementById('lobbyMaxQ').textContent = `${max_questions} 題`;
+  const rcEl = document.getElementById('lobbyRoomCode');
+  if (rcEl) rcEl.textContent = _roomCode || '---';
 
   _isHost = uid === host_uid;
+  _setupP = parseInt(max_players) || _setupP;
+  _setupQ = parseInt(max_questions) || _setupQ;
+
+  // Settings panel: host only
+  const settEl = document.getElementById('lobbySettings');
+  if (settEl) {
+    settEl.style.display = _isHost ? 'block' : 'none';
+    if (_isHost) {
+      document.querySelectorAll('.ls-btn[data-type="players"]').forEach(b =>
+        b.classList.toggle('active', +b.dataset.v === _setupP));
+      document.querySelectorAll('.ls-btn[data-type="questions"]').forEach(b =>
+        b.classList.toggle('active', +b.dataset.v === _setupQ));
+    }
+  }
+
   const me = players.find(p => p.uid === uid);
   _myReady = me?.status === 'ready';
 
@@ -631,9 +779,9 @@ function renderLobby({ players = [], host_uid, max_questions, max_players = 4 })
         ? `<img src="${esc(avSrc)}" alt="" onerror="this.parentElement.textContent='🌟'">`
         : '🌟';
       html += `<div class="slot-card${isSelf ? ' is-self' : ''}">
+        ${isHost ? '<span class="slot-host-tag">房主</span>' : ''}
         <div class="slot-av">${avHtml}</div>
         <div class="slot-name">${esc(name)}</div>
-        ${isHost ? '<span class="slot-host-tag">房主</span>' : ''}
         <span class="slot-ready-tag ${isReady ? 'ready' : 'waiting'}">${isReady ? '✓ 已準備' : '未準備'}</span>
       </div>`;
     } else {
@@ -693,13 +841,16 @@ function renderStrip(players, current_answers) {
   if (!el) return;
   el.innerHTML = (players || []).map(p => {
     const done = answered.has(p.uid);
-    const av = p.avatar
-      ? `<img src="${esc(p.avatar)}" alt="" onerror="this.parentElement.textContent='⭐'">`
+    const cached = _memberCache[p.uid] || {};
+    const avSrc = cached.avatar || '';
+    const name = cached.nickname || p.uid.slice(-4);
+    const av = avSrc
+      ? `<img src="${esc(avSrc)}" alt="" onerror="this.parentElement.textContent='⭐'">`
       : '⭐';
     return `<div class="q-pip${done ? ' done' : ''}">
       <div class="q-pip-av">${av}</div>
-      <span>${esc(p.nickname?.slice(0,4) || p.uid.slice(-4))}</span>
-      ${done ? ' ✓' : ''}
+      <span>${esc(name.slice(0,4))}</span>
+      <span style="font-size:10px">${done ? '已答' : '⋯'}</span>
     </div>`;
   }).join('');
 }
@@ -711,9 +862,9 @@ function updateTimer(remaining) {
   const re = document.getElementById('timerRing');
   if (!ne || !re) return;
   ne.textContent = n;
-  ne.className   = `q-timer-num${n <= 3 ? ' urgent' : ''}`;
-  re.style.strokeDashoffset = CIRC * (1 - remaining / 10);
-  re.style.stroke = n <= 3 ? 'var(--red)' : 'var(--primary)';
+  ne.className   = `q-timer-num${n <= 5 ? ' urgent' : ''}`;
+  re.style.strokeDashoffset = CIRC * (1 - remaining / 15);
+  re.style.stroke = n <= 5 ? 'var(--red)' : 'var(--primary)';
 }
 
 /* ── Answer ── */
@@ -761,12 +912,15 @@ function renderReveal({ question, current_answers = [], players = [], current_in
     const isSelf = p.uid === uid;
     const isOk  = a && (a.is_correct === true || a.is_correct === 'true' || a.is_correct === 1 || a.is_correct === '1');
     const icon  = !a ? '—' : isOk ? '✅' : '❌';
-    const av    = p.avatar
-      ? `<img src="${esc(p.avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
+    const cached = _memberCache[p.uid] || {};
+    const avSrc = cached.avatar || '';
+    const name = cached.nickname || p.uid.slice(-6);
+    const av    = avSrc
+      ? `<img src="${esc(avSrc)}" alt="" onerror="this.parentElement.textContent='🌟'">`
       : '🌟';
     return `<div class="rv-player${isSelf ? ' is-self' : ''}">
       <div class="rv-av">${av}</div>
-      <span class="rv-name">${esc(p.nickname || p.uid.slice(-6))}</span>
+      <span class="rv-name">${esc(name)}</span>
       <span class="rv-ans">${a ? a.answer : '未作答'}</span>
       <span class="rv-icon">${icon}</span>
       <span class="rv-score">${p.score ?? 0}分</span>
@@ -782,15 +936,18 @@ function renderFinal({ players = [], max_questions }) {
   document.getElementById('finalSub').textContent = `${max_questions} 題對戰完成，精彩一戰！`;
   document.getElementById('finalRanking').innerHTML = sorted.map((p, i) => {
     const isSelf = p.uid === uid;
-    const av = p.avatar
-      ? `<img src="${esc(p.avatar)}" alt="" onerror="this.parentElement.textContent='🌟'">`
+    const cached = _memberCache[p.uid] || {};
+    const avSrc = cached.avatar || '';
+    const name = cached.nickname || p.uid.slice(-6);
+    const av = avSrc
+      ? `<img src="${esc(avSrc)}" alt="" onerror="this.parentElement.textContent='🌟'">`
       : '🌟';
     const cls = (i < 3 ? rowCls[i] : '') + (isSelf ? ' self' : '');
     const medal = i < 3 ? medals[i] : `#${i + 1}`;
     return `<div class="rk-row ${cls}">
       <div class="rk-medal">${medal}</div>
       <div class="rk-av">${av}</div>
-      <div class="rk-name">${esc(p.nickname || p.uid.slice(-6))}</div>
+      <div class="rk-name">${esc(name)}</div>
       <div class="rk-pts">${p.score ?? 0}<span class="rk-unit">分</span></div>
     </div>`;
   }).join('');
@@ -860,7 +1017,7 @@ async function shareInviteToMember(targetUid, btn) {
   try {
     const r = await fetch(`${API}/battle-invite`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid, battle_id, target_uid: targetUid, group_name })
+      body: JSON.stringify({ uid, battle_id, target_uid: targetUid, group_id, group_name })
     });
     const d = await r.json();
     if (d.success !== false) {
@@ -876,19 +1033,40 @@ async function shareInviteToMember(targetUid, btn) {
   }
 }
 
-async function copyInviteLink() {
-  const link = `https://liff.line.me/${LIFF_ID}?battle_id=${encodeURIComponent(battle_id)}&group_name=${encodeURIComponent(group_name)}`;
+async function copyRoomCode() {
+  if (!_roomCode) { toast('房號尚未載入'); return; }
   try {
-    await navigator.clipboard.writeText(link);
-    toast('邀請連結已複製！', 'ok');
+    await navigator.clipboard.writeText(_roomCode);
+    toast('房號已複製！', 'ok');
   } catch {
     const el = document.createElement('textarea');
-    el.value = link; el.style.position = 'fixed'; el.style.opacity = '0';
+    el.value = _roomCode; el.style.position = 'fixed'; el.style.opacity = '0';
     document.body.appendChild(el); el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
-    toast('邀請連結已複製！', 'ok');
+    toast('房號已複製！', 'ok');
   }
+}
+
+async function updateLobbySettings(type, value) {
+  if (!_isHost || !battle_id) return;
+  if (type === 'players') _setupP = value;
+  else _setupQ = value;
+  document.querySelectorAll(`.ls-btn[data-type="${type === 'players' ? 'players' : 'questions'}"]`).forEach(b =>
+    b.classList.toggle('active', +b.dataset.v === value));
+  try {
+    await fetch(`${API}/battle-settings`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, battle_id, max_players: _setupP, max_questions: _setupQ })
+    });
+  } catch { toast('設定更新失敗'); }
+}
+
+function playAgain() {
+  stopPoll();
+  const p = new URLSearchParams({ host: '1', uid, group_id, group_name });
+  if (invite_code) p.set('invite_code', invite_code);
+  location.href = `quiz_battle.html?${p}`;
 }
 
 async function doStart() {
