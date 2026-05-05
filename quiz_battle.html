@@ -638,6 +638,10 @@ function goToEntry() {
   _lastStatus = '';
   _isHost     = false;
   showScreen('screenEntry');
+  const inp = document.getElementById('joinCodeInput');
+  if (inp) inp.value = '';
+  const btn = document.getElementById('joinCodeBtn');
+  if (btn) { btn.disabled = false; btn.textContent = '加入房間'; }
 }
 
 async function leaveRoom() {
@@ -649,6 +653,10 @@ async function leaveRoom() {
   _lastStatus = '';
   _isHost     = false;
   showScreen('screenEntry');
+  const inp = document.getElementById('joinCodeInput');
+  if (inp) inp.value = '';
+  const btn = document.getElementById('joinCodeBtn');
+  if (btn) { btn.disabled = false; btn.textContent = '加入房間'; }
   if (uid !== 'demo_user' && bid) {
     fetch(`${API}/battle-kick`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
