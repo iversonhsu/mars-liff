@@ -452,6 +452,7 @@ let _settingsTs = 0;
 let _leaving = false;
 let _readyTs = 0;
 let _groupMembers = [];
+let _currentPlayers = [];
 
 /* ── Helpers ── */
 function gp(k) {
@@ -518,7 +519,8 @@ async function preloadMembers() {
 function renderMemberList(members) {
   const list = document.getElementById('inviteList');
   if (!list) return;
-  const filtered = members.filter(m => m.uid !== uid);
+  const inRoomUids = new Set(_currentPlayers.map(p => p.uid));
+  const filtered = members.filter(m => !inRoomUids.has(m.uid));
   if (filtered.length === 0) {
     list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">沒有其他群組成員</div>';
     return;
@@ -545,14 +547,16 @@ function selQ(n) {
   _setupQ = n;
   document.querySelectorAll('#qSel .sel-btn').forEach(b => b.classList.toggle('active', +b.dataset.v === n));
 }
-async function doCreateBattle() {
+async function doCreateBattle(forcedRoomCode = '') {
   if (!uid || uid === 'demo_user') { toast('示範模式'); return; }
   const btn = document.getElementById('createBtn');
-  btn.disabled = true; btn.textContent = '建立中...';
+  if (btn) { btn.disabled = true; btn.textContent = '建立中...'; }
   try {
+    const body = { uid, group_id, max_questions: _setupQ, max_players: _setupP };
+    if (forcedRoomCode) body.room_code = forcedRoomCode;
     const r = await fetch(`${API}/battle-create`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid, group_id, max_questions: _setupQ, max_players: _setupP })
+      body: JSON.stringify(body)
     });
     const d = await r.json();
     if (!d.success || !d.battle_id) throw new Error(d.error || '建立失敗');
@@ -564,7 +568,7 @@ async function doCreateBattle() {
     startPoll();
   } catch (e) {
     toast(e.message || '建立失敗，請重試');
-    btn.disabled = false; btn.textContent = '⚔️ 建立房間';
+    if (btn) { btn.disabled = false; btn.textContent = '⚔️ 建立房間'; }
   }
 }
 
@@ -593,10 +597,17 @@ async function init() {
     document.getElementById('lobbyGroup').textContent = group_name;
     if (uid !== 'demo_user') {
       try {
-        await fetch(`${API}/battle-join`, {
+        const jr = await fetch(`${API}/battle-join`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ uid, battle_id })
         });
+        const jd = await jr.json();
+        if (jd && jd.success === false) {
+          battle_id = '';
+          showScreen('screenEntry');
+          setTimeout(() => toast(jd.error || '無法加入房間'), 100);
+          return;
+        }
       } catch {}
     }
     preloadMembers();
@@ -698,10 +709,16 @@ async function joinByCode() {
     document.getElementById('lobbyGroup').textContent = group_name;
     if (uid !== 'demo_user') {
       try {
-        await fetch(`${API}/battle-join`, {
+        const jr = await fetch(`${API}/battle-join`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ uid, battle_id })
         });
+        const jd = await jr.json();
+        if (jd && jd.success === false) {
+          toast(jd.error || '無法加入房間');
+          btn.disabled = false; btn.textContent = '加入房間';
+          return;
+        }
       } catch {}
     }
     preloadMembers();
@@ -850,11 +867,14 @@ function renderState(s) {
 
 /* ── Lobby ── */
 function renderLobby({ players = [], host_uid, max_questions, max_players = 4, room_code = '' }) {
+  _currentPlayers = players;
   if (room_code) _roomCode = room_code;
   const rcEl = document.getElementById('lobbyRoomCode');
   if (rcEl) rcEl.textContent = _roomCode || '------';
 
+  const _prevIsHost = _isHost;
   _isHost = uid === host_uid;
+  if (!_prevIsHost && _isHost) toast('您已成為房主');
   if (Date.now() - _settingsTs > 1500) {
     _setupP = parseInt(max_players) || _setupP;
     _setupQ = parseInt(max_questions) || _setupQ;
@@ -902,10 +922,9 @@ function renderLobby({ players = [], host_uid, max_questions, max_players = 4, r
         <span class="slot-ready-tag ${isReady ? 'ready' : 'waiting'}">${isReady ? '✓ 已準備' : '未準備'}</span>
       </div>`;
     } else {
-      const clickAttr = _isHost ? 'onclick="openInviteModal()"' : '';
-      html += `<div class="slot-card empty" ${clickAttr}>
+      html += `<div class="slot-card empty" onclick="openInviteModal()">
         <div class="slot-plus">+</div>
-        <div class="slot-name" style="color:var(--muted)">${_isHost ? '點擊邀請' : '等待加入'}</div>
+        <div class="slot-name" style="color:var(--muted)">點擊邀請</div>
       </div>`;
     }
   }
@@ -1131,7 +1150,7 @@ async function shareInviteToMember(targetUid, btn) {
   try {
     const r = await fetch(`${API}/battle-invite`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid, battle_id, target_uid: targetUid, group_id, group_name })
+      body: JSON.stringify({ uid, battle_id, target_uid: targetUid, group_id, group_name, nickname: _memberCache[uid]?.nickname || '' })
     });
     const d = await r.json();
     if (d.success !== false) {
@@ -1181,11 +1200,35 @@ async function updateLobbySettings(type, value) {
   } catch { toast('設定更新失敗'); }
 }
 
-function playAgain() {
+async function playAgain() {
   stopPoll();
-  const p = new URLSearchParams({ host: '1', uid, group_id, group_name });
-  if (invite_code) p.set('invite_code', invite_code);
-  location.href = `quiz_battle.html?${p}`;
+  if (!_roomCode) { showScreen('screenSetup'); return; }
+  try {
+    const fr = await fetch(`${API}/battle-find`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room_code: _roomCode, uid })
+    });
+    const fd = await fr.json();
+    if (fd.success && fd.battle_id) {
+      battle_id = fd.battle_id;
+      _isHost = false;
+      if (fd.group_id) group_id = fd.group_id;
+      if (uid !== 'demo_user') {
+        await fetch(`${API}/battle-join`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid, battle_id })
+        });
+      }
+      document.getElementById('lobbyGroup').textContent = group_name;
+      preloadMembers();
+      showScreen('screenLobby');
+      startPoll();
+    } else {
+      await doCreateBattle(_roomCode);
+    }
+  } catch {
+    await doCreateBattle(_roomCode);
+  }
 }
 
 async function doStart() {
