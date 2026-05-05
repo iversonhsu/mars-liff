@@ -217,6 +217,18 @@
     /* ── Kick / Leave ── */
     .slot-kick-btn { position: absolute; top: 6px; left: 6px; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--red); background: rgba(239,68,68,0.1); color: var(--red); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; padding: 0; line-height: 1; }
     .slot-kick-btn:active { background: rgba(239,68,68,0.3); }
+
+    /* ── Kick Confirm Dialog ── */
+    .kick-dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .kick-dialog-overlay.open { display: flex; }
+    .kick-dialog { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 24px 20px; width: 100%; max-width: 320px; text-align: center; }
+    .kick-dialog-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .kick-dialog-sub   { font-size: 13px; color: var(--sub); margin-bottom: 22px; line-height: 1.5; }
+    .kick-dialog-btns  { display: flex; gap: 10px; }
+    .kick-dialog-btns button { flex: 1; padding: 13px 0; border-radius: 12px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.12s; }
+    .kick-dialog-btns button:active { opacity: 0.78; }
+    .kick-dialog-cancel  { background: var(--card2); color: var(--sub); border: 1px solid var(--border) !important; }
+    .kick-dialog-confirm { background: var(--red); color: #fff; }
     .leave-btn { padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--red); background: rgba(239,68,68,0.1); color: var(--red); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.12s; white-space: nowrap; }
     .leave-btn:active { background: rgba(239,68,68,0.28); }
     .entry-back { position: absolute; top: 20px; left: 16px; z-index: 2; }
@@ -341,6 +353,18 @@
     <div class="invite-title">邀請群組成員</div>
     <div class="invite-sub">點擊成員旁的「邀請」，即可透過 LINE 傳送邀請卡</div>
     <div id="inviteList"></div>
+  </div>
+</div>
+
+<!-- Kick Confirm Dialog -->
+<div class="kick-dialog-overlay" id="kickDialogOverlay" onclick="closeKickDialog()">
+  <div class="kick-dialog" onclick="event.stopPropagation()">
+    <div class="kick-dialog-title">踢出房間？</div>
+    <div class="kick-dialog-sub" id="kickDialogSub"></div>
+    <div class="kick-dialog-btns">
+      <button class="kick-dialog-cancel" onclick="closeKickDialog()">取消</button>
+      <button class="kick-dialog-confirm" onclick="doKick()">踢出房間</button>
+    </div>
   </div>
 </div>
 
@@ -622,6 +646,26 @@ async function leaveRoom() {
   }
 }
 
+let _kickTarget = null;
+
+function confirmKick(targetUid, name) {
+  _kickTarget = targetUid;
+  document.getElementById('kickDialogSub').textContent = `確定將「${name}」踢出房間？`;
+  document.getElementById('kickDialogOverlay').classList.add('open');
+}
+
+function closeKickDialog() {
+  _kickTarget = null;
+  document.getElementById('kickDialogOverlay').classList.remove('open');
+}
+
+async function doKick() {
+  if (!_kickTarget) return;
+  const t = _kickTarget;
+  closeKickDialog();
+  await kickPlayer(t);
+}
+
 async function kickPlayer(targetUid) {
   if (!_isHost || !battle_id) return;
   try {
@@ -674,7 +718,7 @@ function getPollInterval() {
   if (_lastStatus === 'countdown' || _lastStatus === 'question') return 1000;
   if (_lastStatus === 'reveal') return 2000;
   if (_lastStatus === 'finished') return null;
-  return 3000; // waiting 或初始
+  return 1000; // waiting 或初始
 }
 
 function startPoll() { _leaving = false; poll(); }
@@ -754,7 +798,7 @@ function renderState(s) {
         void el.offsetWidth;
         el.style.animation = 'pulse-in 0.85s ease-out';
       }
-      if (elapsed > 5.3) advance();
+      if (_isHost && elapsed > 5.3) advance();
       break;
     }
 
@@ -768,8 +812,10 @@ function renderState(s) {
       }
       updateTimer(Math.max(0, 15 - elapsed));
       renderStrip(players, current_answers);
-      if (players.length > 0 && current_answers.length >= players.length) advance();
-      else if (elapsed > 15.5) advance();
+      if (_isHost) {
+        if (players.length > 0 && current_answers.length >= players.length) advance();
+        else if (elapsed > 15.5) advance();
+      }
       break;
     }
 
@@ -783,11 +829,10 @@ function renderState(s) {
       const rem = Math.max(0, 5 - elapsed);
       const numEl = document.getElementById('rvNextNum');
       if (numEl) numEl.textContent = Math.max(1, Math.ceil(rem));
-      // Last question: change label
       const isLast = idx >= parseInt(max_questions) - 1;
       const lbl = document.getElementById('rvNextLabel');
       if (lbl) lbl.textContent = isLast ? '對戰結束' : '下一題';
-      if (elapsed > 5.3) advance();
+      if (_isHost && elapsed > 5.3) advance();
       break;
     }
 
@@ -848,7 +893,7 @@ function renderLobby({ players = [], host_uid, max_questions, max_players = 4, r
       const avHtml  = avSrc
         ? `<img src="${esc(avSrc)}" alt="" onerror="this.parentElement.textContent='🌟'">`
         : '🌟';
-      const kickBtn = (_isHost && !isSelf) ? `<button class="slot-kick-btn" onclick="kickPlayer('${esc(p.uid)}')">✕</button>` : '';
+      const kickBtn = (_isHost && !isSelf) ? `<button class="slot-kick-btn" onclick="confirmKick('${esc(p.uid)}', '${esc(name)}')">✕</button>` : '';
       html += `<div class="slot-card${isSelf ? ' is-self' : ''}">
         ${kickBtn}
         ${isHost ? '<span class="slot-host-tag">房主</span>' : ''}
